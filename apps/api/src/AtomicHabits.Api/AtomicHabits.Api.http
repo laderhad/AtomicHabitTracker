@@ -1,0 +1,80 @@
+@AtomicHabits.Api_HostAddress = http://localhost:8080
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/health
+Accept: application/json
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "Password1234",
+  "displayName": "Demo User",
+  "preferredLanguage": "tr-TR",
+  "timeZone": "Europe/Istanbul",
+  "deviceName": "local-dev"
+}
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/habits
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "20 dakika kitap oku",
+  "category": "learning",
+  "identityStatement": "Ben her gun okuyan biriyim.",
+  "cueType": "time_and_place",
+  "cueText": "Her aksam 21:30'da calisma masasinda",
+  "rewardText": "Tamamlayinca ilerleme halkasi dolsun",
+  "difficulty": "easy",
+  "isPositive": true
+}
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/devices/register
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "platform": "ios",
+  "pushToken": "ExponentPushToken[local-dev]",
+  "authorizationStatus": "authorized",
+  "deviceName": "Kerem iPhone",
+  "appVersion": "1.0.0",
+  "timeZone": "Europe/Istanbul"
+}
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/devices
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+PUT {{AtomicHabits.Api_HostAddress}}/api/v1/habits/{{habitId}}/reminders
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "enabled": true,
+  "triggerTime": "21:25",
+  "timeZone": "Europe/Istanbul",
+  "channel": "local",
+  "daysOfWeek": [1, 2, 3, 4, 5],
+  "quietHoursStart": "23:00",
+  "quietHoursEnd": "07:00"
+}
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/habits/{{habitId}}/reminders
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###

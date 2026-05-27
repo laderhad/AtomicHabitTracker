@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/bin*
+**/obj*
+**/node_modules/
+.git/
+.vs/
+.vscode/
+.idea/
+.DS_Store
+*.log

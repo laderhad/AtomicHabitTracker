@@ -1,0 +1,55 @@
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Port=5432;Database=atomic_habits;Username=postgres;Password=postgres
+      Database__Provider: PostgreSql
+      Database__ApplyMigrationsOnStartup: "true"
+      Jwt__SigningKey: dev-only-change-me-atomic-habits-signing-key-32-plus
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=atomic_habits;Username=postgres;Password=postgres
+      Database__Provider: PostgreSql
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: atomic_habits
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d atomic_habits"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
