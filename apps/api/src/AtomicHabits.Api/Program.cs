@@ -5,6 +5,7 @@ using AtomicHabits.Api.Common.Database;
 using AtomicHabits.Api.Common.Time;
 using AtomicHabits.Api.Features.Auth;
 using AtomicHabits.Api.Features.Challenges;
+using AtomicHabits.Api.Features.Client;
 using AtomicHabits.Api.Features.Devices;
 using AtomicHabits.Api.Features.Gamification;
 using AtomicHabits.Api.Features.Habits;
@@ -34,6 +35,24 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IBadgeAwarder, BadgeAwarder>();
 builder.Services.AddAtomicHabitsDatabase(builder.Configuration, builder.Environment);
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+
+var allowedCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MobileDev", policy =>
+    {
+        if (allowedCorsOrigins.Length > 0)
+        {
+            policy
+                .WithOrigins(allowedCorsOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
+});
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
@@ -70,7 +89,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 {
     app.MapOpenApi();
 }
@@ -79,10 +98,17 @@ await app.ApplyDatabaseMigrationsAsync();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+if (app.Configuration.GetValue<bool>("Cors:Enabled"))
+{
+    app.UseCors("MobileDev");
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthEndpoints();
+app.MapClientConfigEndpoints();
 app.MapAuthEndpoints();
 app.MapMeEndpoints();
 app.MapDeviceEndpoints();

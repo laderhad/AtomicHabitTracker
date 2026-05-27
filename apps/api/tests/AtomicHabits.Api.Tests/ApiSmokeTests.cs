@@ -386,7 +386,7 @@ public sealed class ApiSmokeTests
         var badges = await client.GetFromJsonAsync<List<BadgeResponse>>("/api/v1/gamification/badges?culture=tr-TR");
         Assert.NotNull(badges);
         Assert.Equal(9, badges.Count);
-        Assert.Contains(badges, badge => badge.Code == BadgeCodes.FirstHabit && badge.Title == "Ilk aliskanlik");
+        Assert.Contains(badges, badge => badge.Code == BadgeCodes.FirstHabit && badge.Title == "İlk alışkanlık");
 
         var habit = await CreateHabitAsync(client);
 

@@ -5,6 +5,16 @@ Accept: application/json
 
 ###
 
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/client/config
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
 POST {{AtomicHabits.Api_HostAddress}}/api/v1/auth/register
 Content-Type: application/json
 
