@@ -4,6 +4,7 @@ using AtomicHabits.Api.Features.Devices;
 using AtomicHabits.Api.Features.HabitLogs;
 using AtomicHabits.Api.Features.Habits;
 using AtomicHabits.Api.Features.Reminders;
+using AtomicHabits.Api.Features.Reviews;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,8 @@ public sealed class AtomicHabitsDbContext(DbContextOptions<AtomicHabitsDbContext
     public DbSet<Device> Devices => Set<Device>();
 
     public DbSet<HabitReminder> HabitReminders => Set<HabitReminder>();
+
+    public DbSet<WeeklyReview> WeeklyReviews => Set<WeeklyReview>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -125,6 +128,21 @@ public sealed class AtomicHabitsDbContext(DbContextOptions<AtomicHabitsDbContext
             entity.HasOne(reminder => reminder.Habit)
                 .WithOne(habit => habit.Reminder)
                 .HasForeignKey<HabitReminder>(reminder => reminder.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<WeeklyReview>(entity =>
+        {
+            entity.ToTable("weekly_reviews");
+            entity.HasKey(review => review.Id);
+            entity.Property(review => review.WhatWorked).HasMaxLength(1000);
+            entity.Property(review => review.WhatWasHard).HasMaxLength(1000);
+            entity.Property(review => review.Adjustment).HasMaxLength(1000);
+            entity.Property(review => review.Mood).HasMaxLength(64);
+            entity.HasIndex(review => new { review.UserId, review.WeekStartOn }).IsUnique();
+            entity.HasOne(review => review.User)
+                .WithMany()
+                .HasForeignKey(review => review.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

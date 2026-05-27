@@ -10,6 +10,7 @@ using AtomicHabits.Api.Features.Health;
 using AtomicHabits.Api.Features.Me;
 using AtomicHabits.Api.Features.Progress;
 using AtomicHabits.Api.Features.Reminders;
+using AtomicHabits.Api.Features.Reviews;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.IdentityModel.Tokens;
@@ -84,6 +85,7 @@ app.MapDeviceEndpoints();
 app.MapHabitEndpoints();
 app.MapReminderEndpoints();
 app.MapProgressEndpoints();
+app.MapWeeklyReviewEndpoints();
 
 app.Run();
 

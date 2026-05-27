@@ -9,7 +9,7 @@ A backend starter for a bilingual habit-building mobile app, inspired by Atomic 
 - PostgreSQL + EF Core
 - ASP.NET Core Identity + JWT access + rotating refresh tokens
 - Docker Compose for API, PostgreSQL, and Redis
-- Starter features: health, auth, me/preferences, devices, habits, habit logs, reminders, progress dashboard
+- Starter features: health, auth, me/preferences, devices, habits, habit logs, reminders, progress dashboard, weekly reviews
 
 ## Quick start
 
@@ -79,6 +79,28 @@ curl -X PUT http://localhost:8080/api/v1/habits/<habitId>/reminders \
   }'
 ```
 
+Weekly review:
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/reviews/weekly/2026-06-01 \
+  -H "Authorization: Bearer <accessToken>" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "consistencyScore": 88,
+    "whatWorked": "Evening cue made the habit easier to start.",
+    "whatWasHard": "Late meetings pushed the routine back.",
+    "adjustment": "Move the reminder 20 minutes earlier on weekdays.",
+    "mood": "focused"
+  }'
+```
+
+List weekly reviews:
+
+```bash
+curl "http://localhost:8080/api/v1/reviews/weekly?from=2026-06-01&to=2026-06-30" \
+  -H "Authorization: Bearer <accessToken>"
+```
+
 ## Tests
 
 ```bash
@@ -91,5 +113,6 @@ dotnet test AtomicHabitTracker.sln
 - Auth flow: ASP.NET Core Identity + JWT access token + hashed rotating refresh token.
 - Device registration upserts by push token; push tokens are never returned in responses.
 - Reminders are one per habit; local or push channel supported with day filters and quiet hours.
+- Weekly reviews are keyed by Monday week start dates and support score, reflection notes, adjustment, and mood.
 - Docker Compose applies EF migrations on API startup.
 - `DateTimeOffset` values are stored in UTC; streak logic preserves the request local day.

@@ -5,6 +5,7 @@ using AtomicHabits.Api.Features.Auth;
 using AtomicHabits.Api.Features.Devices;
 using AtomicHabits.Api.Features.Habits;
 using AtomicHabits.Api.Features.Reminders;
+using AtomicHabits.Api.Features.Reviews;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -71,10 +72,12 @@ public sealed class ApiSmokeTests
         var response = await client.GetAsync("/api/v1/habits");
         var devicesResponse = await client.GetAsync("/api/v1/devices");
         var remindersResponse = await client.GetAsync($"/api/v1/habits/{Guid.NewGuid()}/reminders");
+        var reviewsResponse = await client.GetAsync("/api/v1/reviews/weekly");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, devicesResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, remindersResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, reviewsResponse.StatusCode);
     }
 
     [Fact]
@@ -201,6 +204,69 @@ public sealed class ApiSmokeTests
         var disabled = await client.GetFromJsonAsync<HabitReminderResponse>($"/api/v1/habits/{habit.Id}/reminders");
         Assert.NotNull(disabled);
         Assert.False(disabled.Enabled);
+    }
+
+    [Fact]
+    public async Task Weekly_review_can_be_upserted_listed_and_deleted()
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        var auth = await RegisterAsync(client);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+
+        var badWeekResponse = await client.PutAsJsonAsync("/api/v1/reviews/weekly/2026-06-02", new UpsertWeeklyReviewRequest(
+            ConsistencyScore: 80,
+            WhatWorked: "Morning check-ins helped.",
+            WhatWasHard: "Evenings were noisy.",
+            Adjustment: "Move reading earlier.",
+            Mood: "steady"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, badWeekResponse.StatusCode);
+
+        var upsertResponse = await client.PutAsJsonAsync("/api/v1/reviews/weekly/2026-06-01", new UpsertWeeklyReviewRequest(
+            ConsistencyScore: 82,
+            WhatWorked: "Morning check-ins helped.",
+            WhatWasHard: "Evenings were noisy.",
+            Adjustment: "Move reading earlier.",
+            Mood: "steady"));
+
+        Assert.Equal(HttpStatusCode.OK, upsertResponse.StatusCode);
+        var review = await upsertResponse.Content.ReadFromJsonAsync<WeeklyReviewResponse>();
+        Assert.NotNull(review);
+        Assert.Equal(new DateOnly(2026, 6, 1), review.WeekStartOn);
+        Assert.Equal(new DateOnly(2026, 6, 7), review.WeekEndOn);
+        Assert.Equal(82, review.ConsistencyScore);
+
+        var updateResponse = await client.PutAsJsonAsync("/api/v1/reviews/weekly/2026-06-01", new UpsertWeeklyReviewRequest(
+            ConsistencyScore: 90,
+            WhatWorked: "Templates made the day easy.",
+            WhatWasHard: "I skipped one lunch walk.",
+            Adjustment: "Set a lunch reminder.",
+            Mood: "focused"));
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated = await updateResponse.Content.ReadFromJsonAsync<WeeklyReviewResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal(review.Id, updated.Id);
+        Assert.Equal(90, updated.ConsistencyScore);
+        Assert.Equal("focused", updated.Mood);
+
+        var getResponse = await client.GetAsync("/api/v1/reviews/weekly/2026-06-01");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var list = await client.GetFromJsonAsync<List<WeeklyReviewResponse>>("/api/v1/reviews/weekly?from=2026-06-01&to=2026-06-30");
+        Assert.NotNull(list);
+        Assert.Single(list);
+
+        var current = await client.GetFromJsonAsync<CurrentWeeklyReviewResponse>("/api/v1/reviews/weekly/current");
+        Assert.NotNull(current);
+        Assert.True(current.WeekStartOn.DayOfWeek == DayOfWeek.Monday);
+
+        var deleteResponse = await client.DeleteAsync("/api/v1/reviews/weekly/2026-06-01");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var missingResponse = await client.GetAsync("/api/v1/reviews/weekly/2026-06-01");
+        Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
     }
 
     private static WebApplicationFactory<Program> CreateFactory()

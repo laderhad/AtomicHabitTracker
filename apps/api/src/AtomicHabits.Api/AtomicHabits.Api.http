@@ -78,3 +78,29 @@ Authorization: Bearer {{accessToken}}
 Accept: application/json
 
 ###
+
+PUT {{AtomicHabits.Api_HostAddress}}/api/v1/reviews/weekly/2026-06-01
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "consistencyScore": 88,
+  "whatWorked": "Evening cue made the habit easier to start.",
+  "whatWasHard": "Late meetings pushed the routine back.",
+  "adjustment": "Move the reminder 20 minutes earlier on weekdays.",
+  "mood": "focused"
+}
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/reviews/weekly?from=2026-06-01&to=2026-06-30
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/reviews/weekly/current
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
