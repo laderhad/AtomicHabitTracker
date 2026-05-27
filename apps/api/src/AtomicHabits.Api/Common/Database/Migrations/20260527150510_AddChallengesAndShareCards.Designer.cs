@@ -3,6 +3,7 @@ using System;
 using AtomicHabits.Api.Common.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AtomicHabits.Api.Common.Database.Migrations
 {
     [DbContext(typeof(AtomicHabitsDbContext))]
-    partial class AtomicHabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527150510_AddChallengesAndShareCards")]
+    partial class AddChallengesAndShareCards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,42 +326,6 @@ namespace AtomicHabits.Api.Common.Database.Migrations
                     b.HasIndex("UserId", "RevokedAt", "LastSeenAt");
 
                     b.ToTable("devices", (string)null);
-                });
-
-            modelBuilder.Entity("AtomicHabits.Api.Features.Gamification.BadgeUnlock", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BadgeCode")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ContextJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTimeOffset?>("SeenAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("UnlockedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "BadgeCode")
-                        .IsUnique();
-
-                    b.HasIndex("UserId", "UnlockedAt");
-
-                    b.HasIndex("UserId", "SeenAt", "UnlockedAt");
-
-                    b.ToTable("badge_unlocks", (string)null);
                 });
 
             modelBuilder.Entity("AtomicHabits.Api.Features.HabitLogs.HabitLog", b =>
@@ -844,17 +811,6 @@ namespace AtomicHabits.Api.Common.Database.Migrations
                 });
 
             modelBuilder.Entity("AtomicHabits.Api.Features.Devices.Device", b =>
-                {
-                    b.HasOne("AtomicHabits.Api.Common.Auth.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AtomicHabits.Api.Features.Gamification.BadgeUnlock", b =>
                 {
                     b.HasOne("AtomicHabits.Api.Common.Auth.ApplicationUser", "User")
                         .WithMany()

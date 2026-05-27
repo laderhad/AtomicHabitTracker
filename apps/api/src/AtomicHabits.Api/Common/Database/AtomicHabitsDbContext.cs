@@ -1,10 +1,13 @@
 using AtomicHabits.Api.Common.Auth;
 using AtomicHabits.Api.Features.Auth;
+using AtomicHabits.Api.Features.Challenges;
 using AtomicHabits.Api.Features.Devices;
+using AtomicHabits.Api.Features.Gamification;
 using AtomicHabits.Api.Features.HabitLogs;
 using AtomicHabits.Api.Features.Habits;
 using AtomicHabits.Api.Features.Reminders;
 using AtomicHabits.Api.Features.Reviews;
+using AtomicHabits.Api.Features.ShareCards;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +30,16 @@ public sealed class AtomicHabitsDbContext(DbContextOptions<AtomicHabitsDbContext
     public DbSet<HabitReminder> HabitReminders => Set<HabitReminder>();
 
     public DbSet<WeeklyReview> WeeklyReviews => Set<WeeklyReview>();
+
+    public DbSet<Challenge> Challenges => Set<Challenge>();
+
+    public DbSet<ChallengeParticipant> ChallengeParticipants => Set<ChallengeParticipant>();
+
+    public DbSet<ChallengeCheckIn> ChallengeCheckIns => Set<ChallengeCheckIn>();
+
+    public DbSet<ShareCard> ShareCards => Set<ShareCard>();
+
+    public DbSet<BadgeUnlock> BadgeUnlocks => Set<BadgeUnlock>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -143,6 +156,91 @@ public sealed class AtomicHabitsDbContext(DbContextOptions<AtomicHabitsDbContext
             entity.HasOne(review => review.User)
                 .WithMany()
                 .HasForeignKey(review => review.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Challenge>(entity =>
+        {
+            entity.ToTable("challenges");
+            entity.HasKey(challenge => challenge.Id);
+            entity.Property(challenge => challenge.Title).HasMaxLength(120).IsRequired();
+            entity.Property(challenge => challenge.Description).HasMaxLength(600);
+            entity.Property(challenge => challenge.Visibility).HasMaxLength(32).IsRequired();
+            entity.Property(challenge => challenge.InviteCode).HasMaxLength(24).IsRequired();
+            entity.HasIndex(challenge => challenge.InviteCode).IsUnique();
+            entity.HasIndex(challenge => new { challenge.Visibility, challenge.StartAt, challenge.EndAt });
+            entity.HasOne(challenge => challenge.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(challenge => challenge.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ChallengeParticipant>(entity =>
+        {
+            entity.ToTable("challenge_participants");
+            entity.HasKey(participant => participant.Id);
+            entity.Property(participant => participant.Role).HasMaxLength(32).IsRequired();
+            entity.HasIndex(participant => new { participant.ChallengeId, participant.UserId }).IsUnique();
+            entity.HasIndex(participant => new { participant.UserId, participant.JoinedAt });
+            entity.HasOne(participant => participant.Challenge)
+                .WithMany(challenge => challenge.Participants)
+                .HasForeignKey(participant => participant.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(participant => participant.User)
+                .WithMany()
+                .HasForeignKey(participant => participant.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ChallengeCheckIn>(entity =>
+        {
+            entity.ToTable("challenge_check_ins");
+            entity.HasKey(checkIn => checkIn.Id);
+            entity.HasIndex(checkIn => new { checkIn.ChallengeId, checkIn.HabitLogId }).IsUnique();
+            entity.HasIndex(checkIn => new { checkIn.UserId, checkIn.CreatedAt });
+            entity.HasOne(checkIn => checkIn.Challenge)
+                .WithMany(challenge => challenge.CheckIns)
+                .HasForeignKey(checkIn => checkIn.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(checkIn => checkIn.User)
+                .WithMany()
+                .HasForeignKey(checkIn => checkIn.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(checkIn => checkIn.HabitLog)
+                .WithMany()
+                .HasForeignKey(checkIn => checkIn.HabitLogId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ShareCard>(entity =>
+        {
+            entity.ToTable("share_cards");
+            entity.HasKey(shareCard => shareCard.Id);
+            entity.Property(shareCard => shareCard.Type).HasMaxLength(32).IsRequired();
+            entity.Property(shareCard => shareCard.Title).HasMaxLength(120).IsRequired();
+            entity.Property(shareCard => shareCard.Subtitle).HasMaxLength(240);
+            entity.Property(shareCard => shareCard.ImageUrl).HasMaxLength(512);
+            entity.Property(shareCard => shareCard.DeepLink).HasMaxLength(512).IsRequired();
+            entity.Property(shareCard => shareCard.PayloadJson).HasColumnType("jsonb");
+            entity.HasIndex(shareCard => new { shareCard.UserId, shareCard.CreatedAt });
+            entity.HasOne(shareCard => shareCard.User)
+                .WithMany()
+                .HasForeignKey(shareCard => shareCard.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<BadgeUnlock>(entity =>
+        {
+            entity.ToTable("badge_unlocks");
+            entity.HasKey(unlock => unlock.Id);
+            entity.Property(unlock => unlock.BadgeCode).HasMaxLength(64).IsRequired();
+            entity.Property(unlock => unlock.ContextJson).HasColumnType("jsonb");
+            entity.HasIndex(unlock => new { unlock.UserId, unlock.BadgeCode }).IsUnique();
+            entity.HasIndex(unlock => new { unlock.UserId, unlock.UnlockedAt });
+            entity.HasIndex(unlock => new { unlock.UserId, unlock.SeenAt, unlock.UnlockedAt });
+            entity.HasOne(unlock => unlock.User)
+                .WithMany()
+                .HasForeignKey(unlock => unlock.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

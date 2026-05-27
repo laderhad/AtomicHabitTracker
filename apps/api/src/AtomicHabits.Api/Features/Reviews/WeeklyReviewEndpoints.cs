@@ -1,6 +1,7 @@
 using AtomicHabits.Api.Common.Auth;
 using AtomicHabits.Api.Common.Database;
 using AtomicHabits.Api.Common.Time;
+using AtomicHabits.Api.Features.Gamification;
 using Microsoft.EntityFrameworkCore;
 
 namespace AtomicHabits.Api.Features.Reviews;
@@ -73,6 +74,7 @@ public static class WeeklyReviewEndpoints
         AtomicHabitsDbContext dbContext,
         ICurrentUser currentUser,
         IClock clock,
+        IBadgeAwarder badgeAwarder,
         CancellationToken cancellationToken)
     {
         var weekStartOn = GetWeekStart(DateOnly.FromDateTime(clock.UtcNow.UtcDateTime));
@@ -113,6 +115,7 @@ public static class WeeklyReviewEndpoints
         AtomicHabitsDbContext dbContext,
         ICurrentUser currentUser,
         IClock clock,
+        IBadgeAwarder badgeAwarder,
         CancellationToken cancellationToken)
     {
         if (!TryParseWeekStart(weekStartOn, out var parsedWeekStart, out var error))
@@ -159,6 +162,10 @@ public static class WeeklyReviewEndpoints
         review.UpdatedAt = now;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await badgeAwarder.AwardAsync(
+            currentUser.UserId,
+            [new BadgeAward(BadgeCodes.FirstWeeklyReview, new { weekStartOn = parsedWeekStart })],
+            cancellationToken);
 
         return Results.Ok(review.ToResponse());
     }

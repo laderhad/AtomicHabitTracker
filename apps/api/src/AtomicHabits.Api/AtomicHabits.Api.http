@@ -104,3 +104,97 @@ Authorization: Bearer {{accessToken}}
 Accept: application/json
 
 ###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/challenges
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "June reading buddy",
+  "description": "Complete one tiny reading habit together.",
+  "startAt": "2026-06-01T00:00:00Z",
+  "endAt": "2026-06-14T23:59:00Z",
+  "visibility": "invite_only"
+}
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/challenges
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/challenges/{{challengeId}}/join
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "inviteCode": "{{inviteCode}}"
+}
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/challenges/{{challengeId}}/check-ins
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "habitLogId": "{{habitLogId}}"
+}
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/share-cards
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "type": "challenge",
+  "title": "Join my reading challenge",
+  "subtitle": "Small steps, together.",
+  "targetType": "challenge",
+  "targetId": "{{challengeId}}"
+}
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/share-cards
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/gamification/badges?culture=tr-TR
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/gamification/summary?culture=tr-TR
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/gamification/unlocks
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+GET {{AtomicHabits.Api_HostAddress}}/api/v1/gamification/notifications?culture=tr-TR&limit=5
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+POST {{AtomicHabits.Api_HostAddress}}/api/v1/gamification/unlocks/mark-seen
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "unlockIds": ["{{unlockId}}"]
+}
+
+###

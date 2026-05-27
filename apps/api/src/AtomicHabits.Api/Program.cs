@@ -4,13 +4,16 @@ using AtomicHabits.Api.Common.Auth;
 using AtomicHabits.Api.Common.Database;
 using AtomicHabits.Api.Common.Time;
 using AtomicHabits.Api.Features.Auth;
+using AtomicHabits.Api.Features.Challenges;
 using AtomicHabits.Api.Features.Devices;
+using AtomicHabits.Api.Features.Gamification;
 using AtomicHabits.Api.Features.Habits;
 using AtomicHabits.Api.Features.Health;
 using AtomicHabits.Api.Features.Me;
 using AtomicHabits.Api.Features.Progress;
 using AtomicHabits.Api.Features.Reminders;
 using AtomicHabits.Api.Features.Reviews;
+using AtomicHabits.Api.Features.ShareCards;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +31,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IBadgeAwarder, BadgeAwarder>();
 builder.Services.AddAtomicHabitsDatabase(builder.Configuration, builder.Environment);
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
@@ -86,6 +90,9 @@ app.MapHabitEndpoints();
 app.MapReminderEndpoints();
 app.MapProgressEndpoints();
 app.MapWeeklyReviewEndpoints();
+app.MapChallengeEndpoints();
+app.MapShareCardEndpoints();
+app.MapGamificationEndpoints();
 
 app.Run();
 

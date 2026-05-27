@@ -3,6 +3,7 @@ using System;
 using AtomicHabits.Api.Common.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AtomicHabits.Api.Common.Database.Migrations
 {
     [DbContext(typeof(AtomicHabitsDbContext))]
-    partial class AtomicHabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527152549_AddBadgeUnlocks")]
+    partial class AddBadgeUnlocks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,9 +343,6 @@ namespace AtomicHabits.Api.Common.Database.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<DateTimeOffset?>("SeenAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTimeOffset>("UnlockedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -355,8 +355,6 @@ namespace AtomicHabits.Api.Common.Database.Migrations
                         .IsUnique();
 
                     b.HasIndex("UserId", "UnlockedAt");
-
-                    b.HasIndex("UserId", "SeenAt", "UnlockedAt");
 
                     b.ToTable("badge_unlocks", (string)null);
                 });

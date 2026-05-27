@@ -1,6 +1,7 @@
 using AtomicHabits.Api.Common.Auth;
 using AtomicHabits.Api.Common.Database;
 using AtomicHabits.Api.Common.Time;
+using AtomicHabits.Api.Features.Gamification;
 using AtomicHabits.Api.Features.HabitLogs;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,6 +72,7 @@ public static class HabitEndpoints
         AtomicHabitsDbContext dbContext,
         ICurrentUser currentUser,
         IClock clock,
+        IBadgeAwarder badgeAwarder,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -100,6 +102,10 @@ public static class HabitEndpoints
 
         dbContext.Habits.Add(habit);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await badgeAwarder.AwardAsync(
+            currentUser.UserId,
+            [new BadgeAward(BadgeCodes.FirstHabit, new { habitId = habit.Id })],
+            cancellationToken);
 
         return Results.Created($"/api/v1/habits/{habit.Id}", habit.ToResponse());
     }
@@ -153,6 +159,7 @@ public static class HabitEndpoints
         AtomicHabitsDbContext dbContext,
         ICurrentUser currentUser,
         IClock clock,
+        IBadgeAwarder badgeAwarder,
         CancellationToken cancellationToken)
     {
         var habit = await dbContext.Habits
@@ -178,6 +185,7 @@ public static class HabitEndpoints
         AtomicHabitsDbContext dbContext,
         ICurrentUser currentUser,
         IClock clock,
+        IBadgeAwarder badgeAwarder,
         CancellationToken cancellationToken)
     {
         var habit = await dbContext.Habits
@@ -226,6 +234,52 @@ public static class HabitEndpoints
 
         dbContext.HabitLogs.Add(log);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (string.Equals(status, HabitLogStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            var userHabitIds = await dbContext.Habits
+                .AsNoTracking()
+                .Where(item => item.UserId == currentUser.UserId)
+                .Select(item => item.Id)
+                .ToListAsync(cancellationToken);
+
+            var completedCheckIns = await dbContext.HabitLogs
+                .AsNoTracking()
+                .Where(item =>
+                    userHabitIds.Contains(item.HabitId) &&
+                    item.Status == HabitLogStatuses.Completed)
+                .CountAsync(cancellationToken);
+
+            var awards = new List<BadgeAward>
+            {
+                new(BadgeCodes.FirstCheckIn, new { habitId = habit.Id })
+            };
+
+            if (habit.Streak.CurrentStreak >= 3)
+            {
+                awards.Add(new BadgeAward(BadgeCodes.ThreeDayStreak, new
+                {
+                    habitId = habit.Id,
+                    streak = habit.Streak.CurrentStreak
+                }));
+            }
+
+            if (habit.Streak.CurrentStreak >= 7)
+            {
+                awards.Add(new BadgeAward(BadgeCodes.SevenDayStreak, new
+                {
+                    habitId = habit.Id,
+                    streak = habit.Streak.CurrentStreak
+                }));
+            }
+
+            if (completedCheckIns >= 10)
+            {
+                awards.Add(new BadgeAward(BadgeCodes.TenCheckIns, new { count = completedCheckIns }));
+            }
+
+            await badgeAwarder.AwardAsync(currentUser.UserId, awards, cancellationToken);
+        }
 
         return Results.Created(
             $"/api/v1/habits/{habit.Id}/logs/{log.Id}",
