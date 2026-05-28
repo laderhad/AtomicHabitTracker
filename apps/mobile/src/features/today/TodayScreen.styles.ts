@@ -123,6 +123,13 @@ export const todayStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  openHabitButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   donePill: {
     minHeight: 36,
     borderRadius: radius.md,

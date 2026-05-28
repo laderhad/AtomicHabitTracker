@@ -15,6 +15,7 @@ import {
   ProgressDashboard,
   ShareCard,
   TodayDashboard,
+  UpdateHabitInput,
   UpsertHabitReminderInput,
   UpsertWeeklyReviewInput,
 } from "./types";
@@ -23,6 +24,7 @@ import { useAuthStore } from "../store/auth";
 export const queryKeys = {
   clientConfig: ["clientConfig"] as const,
   today: ["today"] as const,
+  habit: (habitId: string) => ["habit", habitId] as const,
   progress: ["progress"] as const,
   weeklyReview: ["weeklyReview"] as const,
   challenges: ["challenges"] as const,
@@ -45,6 +47,16 @@ export function useTodayDashboard() {
     queryKey: queryKeys.today,
     queryFn: () => apiRequest<TodayDashboard>("/api/v1/dashboard/today"),
     enabled: Boolean(token),
+  });
+}
+
+export function useHabit(habitId: string | null) {
+  const token = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: habitId ? queryKeys.habit(habitId) : ["habit", "missing"],
+    queryFn: () => apiRequest<HabitResponse>(`/api/v1/habits/${habitId}`),
+    enabled: Boolean(token && habitId),
   });
 }
 
@@ -155,6 +167,34 @@ export function useCreateHabit() {
       apiRequest<HabitResponse>("/api/v1/habits", {
         method: "POST",
         body: JSON.stringify(input),
+      }),
+    onSuccess: () => invalidateDashboard(queryClient),
+  });
+}
+
+export function useUpdateHabit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ habitId, input }: { habitId: string; input: UpdateHabitInput }) =>
+      apiRequest<HabitResponse>(`/api/v1/habits/${habitId}`, {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: (habit) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.habit(habit.id) });
+      invalidateDashboard(queryClient);
+    },
+  });
+}
+
+export function useArchiveHabit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (habitId: string) =>
+      apiRequest<void>(`/api/v1/habits/${habitId}`, {
+        method: "DELETE",
       }),
     onSuccess: () => invalidateDashboard(queryClient),
   });

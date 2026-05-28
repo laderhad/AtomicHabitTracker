@@ -67,6 +67,7 @@ export function TodayScreen() {
             renderItem={({ item }) => (
               <HabitRow
                 habit={item}
+                onOpen={() => router.push(`/habit/${item.id}`)}
                 onComplete={() => completeHabit.mutate(item.id)}
                 isLoading={completeHabit.isPending}
               />

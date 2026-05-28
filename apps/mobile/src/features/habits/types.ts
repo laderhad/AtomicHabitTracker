@@ -1,4 +1,4 @@
-import { CreateHabitInput, UpsertHabitReminderInput } from "../../services/types";
+import { CreateHabitInput, HabitResponse, UpdateHabitInput, UpsertHabitReminderInput } from "../../services/types";
 
 export type HabitTemplateId = "reading" | "walking" | "water" | "focus";
 
@@ -70,6 +70,22 @@ export function toCreateHabitInput(form: HabitFormState): CreateHabitInput {
   };
 }
 
+export function toUpdateHabitInput(form: HabitFormState): UpdateHabitInput {
+  return toCreateHabitInput(form);
+}
+
+export function toHabitFormState(habit: HabitResponse): HabitFormState {
+  return {
+    name: habit.name,
+    category: habit.category ?? "",
+    identityStatement: habit.identityStatement ?? "",
+    cueText: habit.cueText ?? "",
+    rewardText: habit.rewardText ?? "",
+    difficulty: isDifficulty(habit.difficulty) ? habit.difficulty : "easy",
+    behaviorType: habit.isPositive ? "positive" : "negative",
+  };
+}
+
 export function toUpsertHabitReminderInput(
   reminder: ReminderFormState,
   timeZone: string,
@@ -81,4 +97,8 @@ export function toUpsertHabitReminderInput(
     channel: "local",
     daysOfWeek: reminder.daysOfWeek,
   };
+}
+
+function isDifficulty(value: string | undefined): value is Difficulty {
+  return value === "easy" || value === "medium" || value === "hard";
 }

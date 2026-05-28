@@ -38,6 +38,8 @@ export type CreateHabitInput = {
   isPositive: boolean;
 };
 
+export type UpdateHabitInput = Partial<CreateHabitInput>;
+
 export type HabitResponse = CreateHabitInput & {
   id: string;
   isArchived: boolean;
