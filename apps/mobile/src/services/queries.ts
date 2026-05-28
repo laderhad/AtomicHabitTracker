@@ -3,14 +3,20 @@ import { apiRequest } from "./apiClient";
 import {
   AuthResponse,
   BadgeNotification,
+  Challenge,
   ClientConfig,
+  CreateChallengeInput,
   CreateHabitInput,
+  CreateShareCardInput,
+  CurrentWeeklyReview,
   GamificationSummary,
   HabitResponse,
   HabitReminderResponse,
   ProgressDashboard,
+  ShareCard,
   TodayDashboard,
   UpsertHabitReminderInput,
+  UpsertWeeklyReviewInput,
 } from "./types";
 import { useAuthStore } from "../store/auth";
 
@@ -18,6 +24,9 @@ export const queryKeys = {
   clientConfig: ["clientConfig"] as const,
   today: ["today"] as const,
   progress: ["progress"] as const,
+  weeklyReview: ["weeklyReview"] as const,
+  challenges: ["challenges"] as const,
+  shareCards: ["shareCards"] as const,
   gamification: ["gamification"] as const,
   badgeNotifications: ["badgeNotifications"] as const,
 };
@@ -45,6 +54,36 @@ export function useProgressDashboard() {
   return useQuery({
     queryKey: queryKeys.progress,
     queryFn: () => apiRequest<ProgressDashboard>("/api/v1/dashboard/progress"),
+    enabled: Boolean(token),
+  });
+}
+
+export function useCurrentWeeklyReview() {
+  const token = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: queryKeys.weeklyReview,
+    queryFn: () => apiRequest<CurrentWeeklyReview>("/api/v1/reviews/weekly/current"),
+    enabled: Boolean(token),
+  });
+}
+
+export function useChallenges() {
+  const token = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: queryKeys.challenges,
+    queryFn: () => apiRequest<Challenge[]>("/api/v1/challenges"),
+    enabled: Boolean(token),
+  });
+}
+
+export function useShareCards() {
+  const token = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: queryKeys.shareCards,
+    queryFn: () => apiRequest<ShareCard[]>("/api/v1/share-cards"),
     enabled: Boolean(token),
   });
 }
@@ -131,6 +170,70 @@ export function useUpsertHabitReminder() {
         body: JSON.stringify(input),
       }),
     onSuccess: () => invalidateDashboard(queryClient),
+  });
+}
+
+export function useUpsertWeeklyReview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ weekStartOn, input }: { weekStartOn: string; input: UpsertWeeklyReviewInput }) =>
+      apiRequest(`/api/v1/reviews/weekly/${weekStartOn}`, {
+        method: "PUT",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.weeklyReview });
+      invalidateDashboard(queryClient);
+    },
+  });
+}
+
+export function useCreateChallenge() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateChallengeInput) =>
+      apiRequest<Challenge>("/api/v1/challenges", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.challenges });
+      invalidateDashboard(queryClient);
+    },
+  });
+}
+
+export function useJoinChallenge() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ challengeId, inviteCode }: { challengeId: string; inviteCode?: string | null }) =>
+      apiRequest<Challenge>(`/api/v1/challenges/${challengeId}/join`, {
+        method: "POST",
+        body: JSON.stringify({ inviteCode }),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.challenges });
+      invalidateDashboard(queryClient);
+    },
+  });
+}
+
+export function useCreateShareCard() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateShareCardInput) =>
+      apiRequest<ShareCard>("/api/v1/share-cards", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shareCards });
+      invalidateDashboard(queryClient);
+    },
   });
 }
 

@@ -81,6 +81,72 @@ export type ProgressDashboard = {
   }>;
 };
 
+export type WeeklyReview = {
+  id: string;
+  weekStartOn: string;
+  weekEndOn: string;
+  consistencyScore: number | null;
+  whatWorked: string;
+  whatWasHard: string;
+  adjustment: string;
+  mood: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CurrentWeeklyReview = {
+  weekStartOn: string;
+  weekEndOn: string;
+  review: WeeklyReview | null;
+};
+
+export type UpsertWeeklyReviewInput = {
+  consistencyScore: number | null;
+  whatWorked: string;
+  whatWasHard: string;
+  adjustment: string;
+  mood: string;
+};
+
+export type Challenge = {
+  id: string;
+  title: string;
+  description: string;
+  startAt: string;
+  endAt: string;
+  visibility: "private" | "invite_only" | "public";
+  inviteCode: string | null;
+  participantCount: number;
+  currentUserRole: "owner" | "member" | null;
+  createdAt: string;
+};
+
+export type CreateChallengeInput = {
+  title: string;
+  description?: string;
+  startAt: string;
+  endAt: string;
+  visibility: "invite_only" | "public";
+};
+
+export type ShareCard = {
+  id: string;
+  type: "progress" | "habit" | "challenge" | "weekly_review" | "streak";
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  deepLink: string;
+  createdAt: string;
+};
+
+export type CreateShareCardInput = {
+  type: "progress" | "habit" | "challenge" | "weekly_review" | "streak";
+  title?: string;
+  subtitle?: string;
+  targetType?: "progress" | "habit" | "challenge" | "weekly_review" | "streak";
+  targetId?: string | null;
+};
+
 export type BadgeNotification = {
   unlockId: string;
   badgeCode: string;

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { ChartNoAxesColumnIncreasing, ListChecks, Settings2 } from "lucide-react-native";
+import { ChartNoAxesColumnIncreasing, ListChecks, Settings2, UsersRound } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, layout, spacing } from "../../src/theme/theme";
@@ -45,6 +45,13 @@ export default function TabLayout() {
         options={{
           title: t("tabs.progress"),
           tabBarIcon: ({ color, size }) => <ChartNoAxesColumnIncreasing color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="social"
+        options={{
+          title: t("tabs.social"),
+          tabBarIcon: ({ color, size }) => <UsersRound color={color} size={size} />,
         }}
       />
       <Tabs.Screen

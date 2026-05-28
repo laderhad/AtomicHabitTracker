@@ -7,6 +7,7 @@ import { useGamificationSummary, useProgressDashboard } from "../../src/services
 import { useAuthStore } from "../../src/store/auth";
 import { colors, layout, spacing } from "../../src/theme/theme";
 import { uniqueProgressHabits } from "../../src/utils/habits";
+import { WeeklyReviewCard } from "../../src/features/progress/components/WeeklyReviewCard";
 
 export default function ProgressScreen() {
   const { t, i18n } = useTranslation();
@@ -45,6 +46,8 @@ export default function ProgressScreen() {
                 <View style={[styles.progressFill, { width: `${completionPercent}%` }]} />
               </View>
             </Surface>
+
+            <WeeklyReviewCard />
 
             <View style={styles.metrics}>
               <Metric label={t("progress.weeklyCompletion")} value={`%${completionPercent}`} />
