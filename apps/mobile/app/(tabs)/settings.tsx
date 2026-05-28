@@ -1,10 +1,12 @@
 import { Bell, Database, Globe2, LogOut, Moon, Server, ShieldCheck, UserRound } from "lucide-react-native";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Surface } from "../../src/components/primitives";
-import { API_BASE_URL } from "../../src/services/apiClient";
-import { useClientConfig } from "../../src/services/queries";
+import { API_BASE_URL, ApiError } from "../../src/services/apiClient";
+import { normalizeLanguage, saveLanguagePreference, SupportedLanguage } from "../../src/services/languagePreference";
+import { useClientConfig, useUpdatePreferences } from "../../src/services/queries";
 import { useAuthStore } from "../../src/store/auth";
 import { colors, layout, spacing } from "../../src/theme/theme";
 
@@ -13,7 +15,36 @@ export default function SettingsScreen() {
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const config = useClientConfig();
-  const activeLanguage = i18n.language.startsWith("tr") ? t("settings.turkish") : t("settings.english");
+  const updatePreferences = useUpdatePreferences();
+  const [languageMessage, setLanguageMessage] = useState<string | null>(null);
+  const [languageError, setLanguageError] = useState<string | null>(null);
+  const [pendingLanguage, setPendingLanguage] = useState<SupportedLanguage | null>(null);
+  const currentLanguage = normalizeLanguage(i18n.language);
+  const activeLanguage = currentLanguage === "tr-TR" ? t("settings.turkish") : t("settings.english");
+
+  async function changeLanguage(language: SupportedLanguage) {
+    setLanguageMessage(null);
+    setLanguageError(null);
+    setPendingLanguage(language);
+
+    try {
+      const normalizedLanguage = await saveLanguagePreference(language);
+      await i18n.changeLanguage(normalizedLanguage);
+
+      if (user) {
+        await updatePreferences.mutateAsync({
+          preferredLanguage: normalizedLanguage,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || user.timeZone,
+        });
+      }
+
+      setLanguageMessage(i18n.getFixedT(normalizedLanguage)("settings.languageSaved"));
+    } catch (error) {
+      setLanguageError(error instanceof ApiError ? error.message : t("settings.languageError"));
+    } finally {
+      setPendingLanguage(null);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -41,15 +72,21 @@ export default function SettingsScreen() {
           <View style={styles.languageRow}>
             <Button
               label="TR"
-              variant={i18n.language.startsWith("tr") ? "primary" : "secondary"}
-              onPress={() => i18n.changeLanguage("tr-TR")}
+              variant={currentLanguage === "tr-TR" ? "primary" : "secondary"}
+              disabled={updatePreferences.isPending}
+              isLoading={pendingLanguage === "tr-TR"}
+              onPress={() => changeLanguage("tr-TR")}
             />
             <Button
               label="EN"
-              variant={i18n.language.startsWith("en") ? "primary" : "secondary"}
-              onPress={() => i18n.changeLanguage("en-US")}
+              variant={currentLanguage === "en-US" ? "primary" : "secondary"}
+              disabled={updatePreferences.isPending}
+              isLoading={pendingLanguage === "en-US"}
+              onPress={() => changeLanguage("en-US")}
             />
           </View>
+          {languageMessage ? <Text style={styles.feedback}>{languageMessage}</Text> : null}
+          {languageError ? <Text style={styles.error}>{languageError}</Text> : null}
         </Surface>
 
         <SettingsCard
@@ -157,5 +194,15 @@ const styles = StyleSheet.create({
   languageRow: {
     flexDirection: "row",
     gap: spacing.sm,
+  },
+  feedback: {
+    color: colors.green,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  error: {
+    color: colors.coral,
+    fontSize: 13,
+    fontWeight: "800",
   },
 });

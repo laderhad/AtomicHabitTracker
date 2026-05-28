@@ -15,14 +15,16 @@ import {
   ProgressDashboard,
   ShareCard,
   TodayDashboard,
+  UpdatePreferencesInput,
   UpdateHabitInput,
   UpsertHabitReminderInput,
   UpsertWeeklyReviewInput,
 } from "./types";
-import { useAuthStore } from "../store/auth";
+import { AuthUser, useAuthStore } from "../store/auth";
 
 export const queryKeys = {
   clientConfig: ["clientConfig"] as const,
+  me: ["me"] as const,
   today: ["today"] as const,
   habit: (habitId: string) => ["habit", habitId] as const,
   progress: ["progress"] as const,
@@ -155,6 +157,23 @@ export function useAuthMutation(mode: "login" | "register") {
     onSuccess: async (payload) => {
       await setAuth(payload);
       await queryClient.invalidateQueries();
+    },
+  });
+}
+
+export function useUpdatePreferences() {
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdatePreferencesInput) =>
+      apiRequest<AuthUser>("/api/v1/me/preferences", {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: async (user) => {
+      await updateUser(user);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.me });
     },
   });
 }

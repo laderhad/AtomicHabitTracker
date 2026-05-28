@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, T
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Surface } from "../../../components/primitives";
 import { ApiError } from "../../../services/apiClient";
+import { cancelHabitReminder } from "../../../services/localNotifications";
 import { useArchiveHabit, useHabit, useUpdateHabit } from "../../../services/queries";
 import { useAuthStore } from "../../../store/auth";
 import { colors, spacing } from "../../../theme/theme";
@@ -109,6 +110,7 @@ export function HabitDetailScreen() {
 
     try {
       await archiveHabit.mutateAsync(habitId);
+      await cancelHabitReminder(habitId);
       router.replace("/");
     } catch (archiveError) {
       setSubmitError(archiveError instanceof ApiError ? archiveError.message : t("habitDetail.archiveError"));

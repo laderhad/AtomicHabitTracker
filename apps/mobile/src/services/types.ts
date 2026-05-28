@@ -1,5 +1,11 @@
 import { AuthPayload } from "../store/auth";
 
+export type UpdatePreferencesInput = {
+  preferredLanguage?: string;
+  timeZone?: string;
+  privacyLevel?: "private" | "friends" | "public";
+};
+
 export type ClientConfig = {
   service: string;
   apiVersion: string;

@@ -27,6 +27,7 @@ type AuthState = {
   isHydrated: boolean;
   hydrate: () => Promise<void>;
   setAuth: (payload: AuthPayload) => Promise<void>;
+  updateUser: (user: AuthUser) => Promise<void>;
   clearAuth: () => Promise<void>;
 };
 
@@ -62,6 +63,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: payload.user,
       isHydrated: true,
     });
+  },
+  updateUser: async (user) => {
+    await setSecureItem(USER_KEY, JSON.stringify(user));
+    set({ user });
   },
   clearAuth: async () => {
     await Promise.all([

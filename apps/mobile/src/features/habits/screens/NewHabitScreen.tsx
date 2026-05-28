@@ -6,6 +6,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, Vi
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Surface } from "../../../components/primitives";
 import { ApiError } from "../../../services/apiClient";
+import { scheduleHabitReminder } from "../../../services/localNotifications";
 import { useCreateHabit, useUpsertHabitReminder } from "../../../services/queries";
 import { useAuthStore } from "../../../store/auth";
 import { colors, spacing } from "../../../theme/theme";
@@ -83,6 +84,15 @@ export function NewHabitScreen() {
             reminder,
             Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Istanbul",
           ),
+        });
+
+        await scheduleHabitReminder({
+          habitId: habit.id,
+          habitName: habit.name,
+          enabled: reminder.enabled,
+          triggerTime: reminder.triggerTime,
+          daysOfWeek: reminder.daysOfWeek,
+          body: t("habitForm.reminderNotificationBody"),
         });
       }
 
