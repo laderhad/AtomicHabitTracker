@@ -6,21 +6,32 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, T
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Surface } from "../../../components/primitives";
 import { ApiError } from "../../../services/apiClient";
-import { cancelHabitReminder } from "../../../services/localNotifications";
-import { useArchiveHabit, useHabit, useUpdateHabit } from "../../../services/queries";
+import { cancelHabitReminder, scheduleHabitReminder } from "../../../services/localNotifications";
+import {
+  useArchiveHabit,
+  useDisableHabitReminder,
+  useHabit,
+  useHabitReminder,
+  useUpdateHabit,
+  useUpsertHabitReminder,
+} from "../../../services/queries";
 import { useAuthStore } from "../../../store/auth";
 import { colors, spacing } from "../../../theme/theme";
 import { isHabitFormReady, validateHabitForm } from "../habitFormValidation";
 import { HabitDetailsForm } from "../components/HabitDetailsForm";
 import { NewHabitHeader } from "../components/NewHabitHeader";
 import { PrimaryButton } from "../components/PrimaryButton";
+import { ReminderSection } from "../components/ReminderSection";
 import { newHabitStyles as styles } from "../NewHabitScreen.styles";
 import {
   emptyHabitFormState,
   emptyReminderFormState,
   HabitFormState,
+  ReminderFormState,
   toHabitFormState,
+  toReminderFormState,
   toUpdateHabitInput,
+  toUpsertHabitReminderInput,
 } from "../types";
 
 export function HabitDetailScreen() {
@@ -31,10 +42,15 @@ export function HabitDetailScreen() {
   const token = useAuthStore((state) => state.accessToken);
   const hydrated = useAuthStore((state) => state.isHydrated);
   const habit = useHabit(habitId);
+  const habitReminder = useHabitReminder(habitId);
   const updateHabit = useUpdateHabit();
+  const upsertReminder = useUpsertHabitReminder();
+  const disableReminder = useDisableHabitReminder();
   const archiveHabit = useArchiveHabit();
   const [form, setForm] = useState<HabitFormState>(emptyHabitFormState);
+  const [reminder, setReminder] = useState<ReminderFormState>(emptyReminderFormState);
   const [initializedHabitId, setInitializedHabitId] = useState<string | null>(null);
+  const [initializedReminderHabitId, setInitializedReminderHabitId] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -47,16 +63,28 @@ export function HabitDetailScreen() {
     }
   }, [habit.data, initializedHabitId]);
 
-  const formReady = isHabitFormReady(form, emptyReminderFormState);
+  useEffect(() => {
+    if (habitId && habitReminder.isFetched && habitId !== initializedReminderHabitId) {
+      setReminder(toReminderFormState(habitReminder.data));
+      setInitializedReminderHabitId(habitId);
+    }
+  }, [habitId, habitReminder.data, habitReminder.isFetched, initializedReminderHabitId]);
+
+  const formReady = isHabitFormReady(form, reminder);
   const validation = hasSubmitted
-    ? validateHabitForm(form, emptyReminderFormState, t)
+    ? validateHabitForm(form, reminder, t)
     : { isValid: formReady, errors: {} };
-  const isSaving = updateHabit.isPending;
+  const isSaving = updateHabit.isPending || upsertReminder.isPending || disableReminder.isPending;
   const isArchiving = archiveHabit.isPending;
 
   function patchForm(update: Partial<HabitFormState>) {
     setSubmitError(null);
     setForm((current) => ({ ...current, ...update }));
+  }
+
+  function patchReminder(update: Partial<ReminderFormState>) {
+    setSubmitError(null);
+    setReminder((current) => ({ ...current, ...update }));
   }
 
   async function submit() {
@@ -68,16 +96,39 @@ export function HabitDetailScreen() {
       return;
     }
 
-    const nextValidation = validateHabitForm(form, emptyReminderFormState, t);
+    const nextValidation = validateHabitForm(form, reminder, t);
     if (!nextValidation.isValid) {
       return;
     }
 
     try {
-      await updateHabit.mutateAsync({
+      const updatedHabit = await updateHabit.mutateAsync({
         habitId,
         input: toUpdateHabitInput(form),
       });
+
+      if (reminder.enabled) {
+        await upsertReminder.mutateAsync({
+          habitId,
+          input: toUpsertHabitReminderInput(
+            reminder,
+            Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Istanbul",
+          ),
+        });
+
+        await scheduleHabitReminder({
+          habitId,
+          habitName: updatedHabit.name,
+          enabled: reminder.enabled,
+          triggerTime: reminder.triggerTime,
+          daysOfWeek: reminder.daysOfWeek,
+          body: t("habitForm.reminderNotificationBody"),
+        });
+      } else {
+        await disableReminder.mutateAsync(habitId);
+        await cancelHabitReminder(habitId);
+      }
+
       router.replace("/");
     } catch (submitError) {
       setSubmitError(submitError instanceof ApiError ? submitError.message : t("habitDetail.updateError"));
@@ -117,7 +168,7 @@ export function HabitDetailScreen() {
     }
   }
 
-  if (!hydrated || habit.isLoading) {
+  if (!hydrated || habit.isLoading || habitReminder.isLoading) {
     return <HabitDetailLoading />;
   }
 
@@ -152,6 +203,11 @@ export function HabitDetailScreen() {
             submitError={submitError}
             validation={validation}
             onChange={patchForm}
+          />
+          <ReminderSection
+            reminder={reminder}
+            error={validation.errors.reminderTime}
+            onChange={patchReminder}
           />
           <Surface tone="coral">
             <Text style={styles.cardTitle}>{t("habitDetail.archiveTitle")}</Text>

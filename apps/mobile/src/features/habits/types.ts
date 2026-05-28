@@ -1,4 +1,10 @@
-import { CreateHabitInput, HabitResponse, UpdateHabitInput, UpsertHabitReminderInput } from "../../services/types";
+import {
+  CreateHabitInput,
+  HabitReminderResponse,
+  HabitResponse,
+  UpdateHabitInput,
+  UpsertHabitReminderInput,
+} from "../../services/types";
 
 export type HabitTemplateId = "reading" | "walking" | "water" | "focus";
 
@@ -96,6 +102,18 @@ export function toUpsertHabitReminderInput(
     timeZone,
     channel: "local",
     daysOfWeek: reminder.daysOfWeek,
+  };
+}
+
+export function toReminderFormState(reminder: HabitReminderResponse | null | undefined): ReminderFormState {
+  if (!reminder) {
+    return emptyReminderFormState;
+  }
+
+  return {
+    enabled: reminder.enabled,
+    triggerTime: reminder.triggerTime,
+    daysOfWeek: reminder.daysOfWeek.length ? [...reminder.daysOfWeek] : defaultReminderDays,
   };
 }
 

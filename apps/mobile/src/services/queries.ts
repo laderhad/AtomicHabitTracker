@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "./apiClient";
+import { ApiError, apiRequest } from "./apiClient";
 import {
   AuthResponse,
   BadgeNotification,
@@ -12,6 +12,7 @@ import {
   GamificationSummary,
   HabitResponse,
   HabitReminderResponse,
+  PrivacyExport,
   ProgressDashboard,
   ShareCard,
   TodayDashboard,
@@ -27,6 +28,7 @@ export const queryKeys = {
   me: ["me"] as const,
   today: ["today"] as const,
   habit: (habitId: string) => ["habit", habitId] as const,
+  habitReminder: (habitId: string) => ["habitReminder", habitId] as const,
   progress: ["progress"] as const,
   weeklyReview: ["weeklyReview"] as const,
   challenges: ["challenges"] as const,
@@ -58,6 +60,26 @@ export function useHabit(habitId: string | null) {
   return useQuery({
     queryKey: habitId ? queryKeys.habit(habitId) : ["habit", "missing"],
     queryFn: () => apiRequest<HabitResponse>(`/api/v1/habits/${habitId}`),
+    enabled: Boolean(token && habitId),
+  });
+}
+
+export function useHabitReminder(habitId: string | null) {
+  const token = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: habitId ? queryKeys.habitReminder(habitId) : ["habitReminder", "missing"],
+    queryFn: async () => {
+      try {
+        return await apiRequest<HabitReminderResponse>(`/api/v1/habits/${habitId}/reminders`);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          return null;
+        }
+
+        throw error;
+      }
+    },
     enabled: Boolean(token && habitId),
   });
 }
@@ -178,6 +200,28 @@ export function useUpdatePreferences() {
   });
 }
 
+export function useExportPrivacyData() {
+  return useMutation({
+    mutationFn: () => apiRequest<PrivacyExport>("/api/v1/privacy/export"),
+  });
+}
+
+export function useDeleteAccount() {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () =>
+      apiRequest<void>("/api/v1/privacy/account", {
+        method: "DELETE",
+      }),
+    onSuccess: async () => {
+      await clearAuth();
+      queryClient.clear();
+    },
+  });
+}
+
 export function useCreateHabit() {
   const queryClient = useQueryClient();
 
@@ -228,7 +272,25 @@ export function useUpsertHabitReminder() {
         method: "PUT",
         body: JSON.stringify(input),
       }),
-    onSuccess: () => invalidateDashboard(queryClient),
+    onSuccess: (reminder) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.habitReminder(reminder.habitId) });
+      invalidateDashboard(queryClient);
+    },
+  });
+}
+
+export function useDisableHabitReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (habitId: string) =>
+      apiRequest<void>(`/api/v1/habits/${habitId}/reminders`, {
+        method: "DELETE",
+      }),
+    onSuccess: (_payload, habitId) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.habitReminder(habitId) });
+      invalidateDashboard(queryClient);
+    },
   });
 }
 

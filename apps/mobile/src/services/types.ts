@@ -6,6 +6,26 @@ export type UpdatePreferencesInput = {
   privacyLevel?: "private" | "friends" | "public";
 };
 
+export type PrivacyExport = {
+  exportedAt: string;
+  user: {
+    id: string;
+    email: string;
+    displayName: string;
+    preferredLanguage: string;
+    timeZone: string;
+    privacyLevel: string;
+  };
+  habits: unknown[];
+  habitLogs: unknown[];
+  weeklyReviews: unknown[];
+  challenges: unknown[];
+  challengeCheckIns: unknown[];
+  shareCards: unknown[];
+  badgeUnlocks: unknown[];
+  devices: unknown[];
+};
+
 export type ClientConfig = {
   service: string;
   apiVersion: string;

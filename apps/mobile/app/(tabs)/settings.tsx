@@ -1,7 +1,8 @@
+import { router } from "expo-router";
 import { Bell, Database, Globe2, LogOut, Moon, Server, ShieldCheck, UserRound } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Surface } from "../../src/components/primitives";
 import { API_BASE_URL, ApiError } from "../../src/services/apiClient";
@@ -99,6 +100,7 @@ export default function SettingsScreen() {
           icon={<ShieldCheck color={colors.green} size={20} />}
           title={t("settings.dataPrivacy")}
           copy={t("settings.dataPrivacyCopy")}
+          onPress={() => router.push("/privacy")}
         />
 
         {user ? (
@@ -130,16 +132,36 @@ export default function SettingsScreen() {
   );
 }
 
-function SettingsCard({ icon, title, copy }: { icon: React.ReactNode; title: string; copy: string }) {
+function SettingsCard({
+  icon,
+  title,
+  copy,
+  onPress,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  copy: string;
+  onPress?: () => void;
+}) {
+  const content = (
+    <View style={styles.row}>
+      {icon}
+      <View style={styles.sectionCopy}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.copy}>{copy}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <Surface>
-      <View style={styles.row}>
-        {icon}
-        <View style={styles.sectionCopy}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          <Text style={styles.copy}>{copy}</Text>
-        </View>
-      </View>
+      {onPress ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress}>
+          {content}
+        </Pressable>
+      ) : (
+        content
+      )}
     </Surface>
   );
 }
