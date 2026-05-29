@@ -27,6 +27,7 @@ export type HabitReminderScheduleInput = {
   triggerTime: string;
   daysOfWeek: number[];
   body: string;
+  requestPermission?: boolean;
 };
 
 export type HabitReminderScheduleResult =
@@ -68,7 +69,10 @@ export async function scheduleHabitReminder(
     return { status: "invalid_time" };
   }
 
-  const permissionGranted = await ensureNotificationPermission();
+  const permissionGranted =
+    input.requestPermission === false
+      ? await hasNotificationPermission()
+      : await ensureNotificationPermission();
   if (!permissionGranted) {
     return { status: "denied" };
   }
@@ -176,6 +180,14 @@ export async function clearAllLocalHabitReminders() {
   await AsyncStorage.removeItem(REMINDER_NOTIFICATION_IDS_KEY);
 }
 
+export async function reconcileLocalHabitReminders(activeHabitIds: string[]) {
+  const activeIdSet = new Set(activeHabitIds);
+  const allIdentifiers = await getHabitReminderNotificationIds();
+  const staleHabitIds = Object.keys(allIdentifiers).filter((habitId) => !activeIdSet.has(habitId));
+
+  await Promise.all(staleHabitIds.map((habitId) => cancelHabitReminder(habitId)));
+}
+
 export async function cancelHabitReminder(habitId: string) {
   const allIdentifiers = await getHabitReminderNotificationIds();
   const identifiers = allIdentifiers[habitId] ?? [];
@@ -189,6 +201,13 @@ export async function cancelHabitReminder(habitId: string) {
 
   delete allIdentifiers[habitId];
   await AsyncStorage.setItem(REMINDER_NOTIFICATION_IDS_KEY, JSON.stringify(allIdentifiers));
+}
+
+async function hasNotificationPermission() {
+  const Notifications = await getNotificationsModule();
+  const currentPermissions = await Notifications.getPermissionsAsync();
+
+  return currentPermissions.granted;
 }
 
 async function ensureNotificationPermission() {

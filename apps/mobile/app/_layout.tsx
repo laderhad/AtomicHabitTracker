@@ -3,6 +3,7 @@ import i18n from "../src/i18n";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { ReminderSyncBootstrap } from "../src/features/reminders/ReminderSyncBootstrap";
 import { AppProviders } from "../src/providers/AppProviders";
 import { getSavedLanguage, normalizeLanguage } from "../src/services/languagePreference";
 import { configureNotificationHandler } from "../src/services/localNotifications";
@@ -29,6 +30,7 @@ export default function RootLayout() {
 
   return (
     <AppProviders>
+      <ReminderSyncBootstrap />
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
