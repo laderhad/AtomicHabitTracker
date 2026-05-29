@@ -1,6 +1,7 @@
-import { RefreshCw, UsersRound } from "lucide-react-native";
+import { UsersRound } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, View } from "react-native";
+import { ErrorState } from "../../../components/ErrorState";
 import { Button, Surface } from "../../../components/primitives";
 import { useChallenges, useJoinChallenge } from "../../../services/queries";
 import { Challenge } from "../../../services/types";
@@ -24,7 +25,15 @@ export function ChallengeList() {
 
       {challenges.isLoading ? <ActivityIndicator color={colors.green} /> : null}
 
-      {challenges.data?.length ? (
+      {challenges.error ? (
+        <ErrorState
+          title={t("common.loadErrorTitle")}
+          copy={t("common.loadErrorCopy")}
+          actionLabel={t("common.retry")}
+          onRetry={() => challenges.refetch()}
+          embedded
+        />
+      ) : challenges.data?.length ? (
         challenges.data.map((challenge) => (
           <ChallengeRow
             key={challenge.id}
@@ -36,15 +45,6 @@ export function ChallengeList() {
         ))
       ) : challenges.isFetched ? (
         <Text style={styles.copy}>{t("social.noChallenges")}</Text>
-      ) : null}
-
-      {challenges.error ? (
-        <Button
-          label={t("common.retry")}
-          variant="secondary"
-          icon={<RefreshCw color={colors.green} size={18} />}
-          onPress={() => challenges.refetch()}
-        />
       ) : null}
     </Surface>
   );

@@ -1,8 +1,10 @@
-import { Award, CalendarDays, Flame, RefreshCw } from "lucide-react-native";
+import { Award, CalendarDays, Flame } from "lucide-react-native";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Metric, Surface } from "../../src/components/primitives";
+import { ErrorState } from "../../src/components/ErrorState";
+import { Metric, Surface } from "../../src/components/primitives";
 import { useGamificationSummary, useProgressDashboard } from "../../src/services/queries";
 import { useAuthStore } from "../../src/store/auth";
 import { colors, layout, spacing } from "../../src/theme/theme";
@@ -16,10 +18,31 @@ export default function ProgressScreen() {
   const gamification = useGamificationSummary(i18n.language);
   const habits = uniqueProgressHabits(progress.data?.habits ?? []);
   const completionPercent = Math.round((progress.data?.completionRate ?? 0) * 100);
+  const refreshing = progress.isRefetching || gamification.isRefetching;
+
+  const refreshProgress = useCallback(() => {
+    if (!token) {
+      return;
+    }
+
+    void Promise.all([progress.refetch(), gamification.refetch()]);
+  }, [gamification, progress, token]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          token ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refreshProgress}
+              tintColor={colors.green}
+              colors={[colors.green]}
+            />
+          ) : undefined
+        }
+      >
         <View style={styles.header}>
           <Text style={styles.title}>{t("progress.title")}</Text>
           <Text style={styles.subtitle}>{t("progress.subtitle")}</Text>
@@ -31,6 +54,13 @@ export default function ProgressScreen() {
           </Surface>
         ) : progress.isLoading ? (
           <ActivityIndicator color={colors.green} />
+        ) : progress.error ? (
+          <ErrorState
+            title={t("common.loadErrorTitle")}
+            copy={t("common.loadErrorCopy")}
+            actionLabel={t("common.retry")}
+            onRetry={() => progress.refetch()}
+          />
         ) : (
           <>
             <Surface style={styles.weekCard}>
@@ -100,14 +130,6 @@ export default function ProgressScreen() {
           </>
         )}
 
-        {progress.error ? (
-          <Button
-            label={t("common.retry")}
-            variant="secondary"
-            icon={<RefreshCw color={colors.green} size={18} />}
-            onPress={() => progress.refetch()}
-          />
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

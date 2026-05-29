@@ -22,6 +22,8 @@ export const resources = {
         email: "E-posta",
         password: "Parola",
         displayName: "Ad",
+        loadErrorTitle: "Veri alınamadı",
+        loadErrorCopy: "Bağlantıyı kontrol edip tekrar dene.",
       },
       today: {
         title: "Bugün",
@@ -340,6 +342,8 @@ export const resources = {
         email: "Email",
         password: "Password",
         displayName: "Name",
+        loadErrorTitle: "Could not load data",
+        loadErrorCopy: "Check your connection and try again.",
       },
       today: {
         title: "Today",

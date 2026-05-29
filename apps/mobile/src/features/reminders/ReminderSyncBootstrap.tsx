@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 import { syncLocalHabitReminders } from "../../services/reminderSync";
 import { useAuthStore } from "../../store/auth";
 
@@ -10,7 +11,7 @@ export function ReminderSyncBootstrap() {
   const lastSyncKey = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isHydrated || !accessToken) {
+    if (Platform.OS === "web" || !isHydrated || !accessToken) {
       lastSyncKey.current = null;
       return;
     }
@@ -22,7 +23,9 @@ export function ReminderSyncBootstrap() {
 
     lastSyncKey.current = syncKey;
 
-    void syncLocalHabitReminders(t("habitForm.reminderNotificationBody"));
+    void syncLocalHabitReminders(t("habitForm.reminderNotificationBody")).catch(() => {
+      lastSyncKey.current = null;
+    });
   }, [accessToken, i18n.language, isHydrated, t]);
 
   return null;

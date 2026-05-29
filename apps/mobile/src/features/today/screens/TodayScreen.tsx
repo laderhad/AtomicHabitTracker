@@ -1,7 +1,9 @@
 import { router } from "expo-router";
-import { Plus, RefreshCw } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, View } from "react-native";
+import { ErrorState } from "../../../components/ErrorState";
 import { Button } from "../../../components/primitives";
 import {
   useBadgeNotifications,
@@ -31,6 +33,11 @@ export function TodayScreen() {
   const completeHabit = useCompleteHabit();
   const markSeen = useMarkNotificationsSeen();
   const habits = uniqueTodayHabits(today.data?.habits ?? []);
+  const refreshing = today.isRefetching || notifications.isRefetching;
+
+  const refreshToday = useCallback(() => {
+    void Promise.all([today.refetch(), notifications.refetch()]);
+  }, [notifications, today]);
 
   if (!hydrated) {
     return <LoadingView />;
@@ -41,7 +48,12 @@ export function TodayScreen() {
   }
 
   return (
-    <ScreenFrame title={t("today.title")} subtitle={t("today.subtitle")}>
+    <ScreenFrame
+      title={t("today.title")}
+      subtitle={t("today.subtitle")}
+      refreshing={refreshing}
+      onRefresh={refreshToday}
+    >
       <TodaySummaryCard habits={habits} />
 
       <BadgeNotificationsCard
@@ -51,7 +63,14 @@ export function TodayScreen() {
 
       {today.isLoading ? <LoadingView compact /> : null}
 
-      {habits.length ? (
+      {today.error ? (
+        <ErrorState
+          title={t("common.loadErrorTitle")}
+          copy={t("common.loadErrorCopy")}
+          actionLabel={t("common.retry")}
+          onRetry={() => today.refetch()}
+        />
+      ) : habits.length ? (
         <>
           <Button
             label={t("today.addHabit")}
@@ -76,15 +95,6 @@ export function TodayScreen() {
         </>
       ) : today.isFetched ? (
         <TodayEmptyState />
-      ) : null}
-
-      {today.error ? (
-        <Button
-          label={t("common.retry")}
-          variant="secondary"
-          icon={<RefreshCw color={colors.green} size={18} />}
-          onPress={() => today.refetch()}
-        />
       ) : null}
     </ScreenFrame>
   );
