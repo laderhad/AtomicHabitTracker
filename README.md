@@ -1,118 +1,59 @@
-# AtomicHabitTracker
+# Habit Tracking Productivity App
 
-A backend starter for a bilingual habit-building mobile app, inspired by Atomic Habits principles. This repo focuses on system design and behavior change mechanics without using book text or copyrighted material.
+**Mobile-first habit tracking with secure auth and actionable progress insights.**
 
-## What you get
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-10.0-512BD4?logo=dotnet)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql&logoColor=white)
+![EF Core](https://img.shields.io/badge/EF%20Core-8-512BD4?logo=dotnet)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![React / PWA](https://img.shields.io/badge/React%20%2F%20PWA-Mobile--first-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-xUnit-5C2D91)
 
-- ASP.NET Core 10 minimal API
-- Modular monolith + vertical slice structure
-- PostgreSQL + EF Core
-- ASP.NET Core Identity + JWT access + rotating refresh tokens
-- Docker Compose for API, PostgreSQL, and Redis
-- Starter features: health, auth, me/preferences, devices, habits, habit logs, reminders, progress dashboard, weekly reviews
+A mobile-first habit tracking application designed to help users build sustainable routines through daily check-ins, streak tracking, reminders, and progress insights. The backend is an ASP.NET Core Minimal API secured with Identity, JWT access tokens, and rotating refresh tokens, backed by PostgreSQL via EF Core. The frontend delivers a responsive PWA experience with settings, privacy, and notifications screens.
 
-## Quick start
+## Product Overview
 
-```bash
-docker compose -f infra/docker/compose.yaml up -d db redis api
-```
+- Users register and sign in securely.
+- Create and manage habits with daily check-ins.
+- Track streaks and progress insights.
+- Configure reminders with device registration support.
+- Access settings, notifications, language, and privacy screens.
+- Mobile-first PWA experience optimized for everyday use.
 
-API base URL:
+## Core Features
 
-```text
-http://localhost:8080
-```
+- User registration and login
+- JWT access tokens and rotating refresh tokens
+- Habit creation and management
+- Daily habit check-ins
+- Streak tracking
+- Progress dashboard
+- Reminder configuration
+- Device registration
+- Settings and privacy screens
+- Mobile-first PWA interface
+- Dockerized backend environment
+- Smoke and integration tests
 
-Health check:
+## Tech Stack
 
-```bash
-curl http://localhost:8080/api/v1/health
-```
+| Layer | Stack |
+| --- | --- |
+| Frontend | React<br>TypeScript<br>PWA mobile-first UI |
+| Backend | ASP.NET Core Minimal API<br>ASP.NET Core Identity<br>JWT authentication<br>Rotating refresh tokens |
+| Database | PostgreSQL<br>EF Core<br>EF Core migrations |
+| Infrastructure | Docker Compose<br>Redis |
+| Testing | xUnit<br>WebApplicationFactory<br>Smoke and integration tests |
 
-Register:
+## Architecture
 
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "email": "demo@example.com",
-    "password": "Password1234",
-    "displayName": "Demo User",
-    "preferredLanguage": "tr-TR",
-    "timeZone": "Europe/Istanbul",
-    "deviceName": "local-dev"
-  }'
-```
+- Modular monolith with a single deployable backend
+- Vertical slice organization per feature
+- Feature-based structure with clear boundaries
+- Core areas include Auth, Habits, Devices, Reminders, and Progress
 
-Protected endpoints require the `Authorization: Bearer <accessToken>` header.
+## Legal Note
 
-Device register:
-
-```bash
-curl -X POST http://localhost:8080/api/v1/devices/register \
-  -H "Authorization: Bearer <accessToken>" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "platform": "ios",
-    "pushToken": "ExponentPushToken[...]",
-    "authorizationStatus": "authorized",
-    "deviceName": "Kerem iPhone",
-    "appVersion": "1.0.0",
-    "timeZone": "Europe/Istanbul"
-  }'
-```
-
-Habit reminder:
-
-```bash
-curl -X PUT http://localhost:8080/api/v1/habits/<habitId>/reminders \
-  -H "Authorization: Bearer <accessToken>" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "enabled": true,
-    "triggerTime": "21:25",
-    "timeZone": "Europe/Istanbul",
-    "channel": "local",
-    "daysOfWeek": [1, 2, 3, 4, 5],
-    "quietHoursStart": "23:00",
-    "quietHoursEnd": "07:00"
-  }'
-```
-
-Weekly review:
-
-```bash
-curl -X PUT http://localhost:8080/api/v1/reviews/weekly/2026-06-01 \
-  -H "Authorization: Bearer <accessToken>" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "consistencyScore": 88,
-    "whatWorked": "Evening cue made the habit easier to start.",
-    "whatWasHard": "Late meetings pushed the routine back.",
-    "adjustment": "Move the reminder 20 minutes earlier on weekdays.",
-    "mood": "focused"
-  }'
-```
-
-List weekly reviews:
-
-```bash
-curl "http://localhost:8080/api/v1/reviews/weekly?from=2026-06-01&to=2026-06-30" \
-  -H "Authorization: Bearer <accessToken>"
-```
-
-## Tests
-
-```bash
-dotnet build AtomicHabitTracker.sln
-dotnet test AtomicHabitTracker.sln
-```
-
-## Notes
-
-- Auth flow: ASP.NET Core Identity + JWT access token + hashed rotating refresh token.
-- Device registration upserts by push token; push tokens are never returned in responses.
-- Reminders are one per habit; local or push channel supported with day filters and quiet hours.
-- Weekly reviews are keyed by Monday week start dates and support score, reflection notes, adjustment, and mood.
-- Docker Compose applies EF migrations on API startup.
-- `DateTimeOffset` values are stored in UTC; streak logic preserves the request local day.
+This project is an independent habit tracker and does not include copyrighted book text or official book content.
