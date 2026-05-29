@@ -8,17 +8,20 @@ import { AppProviders } from "../src/providers/AppProviders";
 import { getSavedLanguage, normalizeLanguage } from "../src/services/languagePreference";
 import { configureNotificationHandler } from "../src/services/localNotifications";
 import { useAuthStore } from "../src/store/auth";
-import { colors } from "../src/theme/theme";
+import { useThemeStore } from "../src/store/theme";
 
 export default function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const userLanguage = useAuthStore((state) => state.user?.preferredLanguage);
+  const hydrateTheme = useThemeStore((state) => state.hydrate);
+  const palette = useThemeStore((state) => state.palette);
 
   useEffect(() => {
     void hydrate();
+    void hydrateTheme();
     configureNotificationHandler();
-  }, [hydrate]);
+  }, [hydrate, hydrateTheme]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -31,11 +34,11 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <ReminderSyncBootstrap />
-      <StatusBar style="dark" />
+      <StatusBar style={palette.paper === "#101715" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.paper },
+          contentStyle: { backgroundColor: palette.paper },
         }}
       >
         <Stack.Screen name="(tabs)" />

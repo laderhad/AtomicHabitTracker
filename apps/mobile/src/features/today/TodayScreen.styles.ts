@@ -6,6 +6,14 @@ export const todayStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.paper,
   },
+  feedbackToastLayer: {
+    position: "absolute",
+    left: spacing.lg,
+    right: spacing.lg,
+    zIndex: 30,
+    elevation: 30,
+    alignItems: "center",
+  },
   container: {
     width: "100%",
     maxWidth: layout.contentMaxWidth,
@@ -93,6 +101,38 @@ export const todayStyles = StyleSheet.create({
   },
   notification: {
     gap: spacing.xs,
+  },
+  feedbackToast: {
+    width: "100%",
+    maxWidth: layout.contentMaxWidth,
+    minHeight: 44,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  feedbackSuccess: {
+    backgroundColor: colors.greenSoft,
+    borderColor: colors.greenLine,
+  },
+  feedbackError: {
+    backgroundColor: colors.coralSoft,
+    borderColor: "#ecc6ba",
+  },
+  feedbackText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+  feedbackSuccessText: {
+    color: colors.green,
+  },
+  feedbackErrorText: {
+    color: colors.coral,
   },
   badgeTitle: {
     color: colors.coral,

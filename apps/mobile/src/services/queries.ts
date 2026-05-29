@@ -371,7 +371,31 @@ export function useCompleteHabit() {
           source: "manual",
         }),
       }),
-    onSuccess: () => invalidateDashboard(queryClient),
+    onMutate: async (habitId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.today });
+
+      const previousToday = queryClient.getQueryData<TodayDashboard>(queryKeys.today);
+      queryClient.setQueryData<TodayDashboard>(queryKeys.today, (current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          habits: current.habits.map((habit) =>
+            habit.id === habitId ? { ...habit, completedToday: true } : habit,
+          ),
+        };
+      });
+
+      return { previousToday };
+    },
+    onError: (_error, _habitId, context) => {
+      if (context?.previousToday) {
+        queryClient.setQueryData(queryKeys.today, context.previousToday);
+      }
+    },
+    onSettled: () => invalidateDashboard(queryClient),
   });
 }
 

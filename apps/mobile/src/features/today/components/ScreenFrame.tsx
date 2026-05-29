@@ -8,11 +8,12 @@ type ScreenFrameProps = {
   title: string;
   subtitle: string;
   children: ReactNode;
+  overlay?: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
 };
 
-export function ScreenFrame({ title, subtitle, children, refreshing, onRefresh }: ScreenFrameProps) {
+export function ScreenFrame({ title, subtitle, children, overlay, refreshing, onRefresh }: ScreenFrameProps) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -35,6 +36,7 @@ export function ScreenFrame({ title, subtitle, children, refreshing, onRefresh }
         </View>
         {children}
       </ScrollView>
+      {overlay}
     </SafeAreaView>
   );
 }

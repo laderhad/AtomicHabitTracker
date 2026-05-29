@@ -42,9 +42,12 @@ export const resources = {
           keepGoing: "Ritmi bozma, küçük devam et.",
         },
         createHabit: "Alışkanlık kur",
+        habitCreated: "Alışkanlık oluşturuldu.",
         addHabit: "Yeni alışkanlık",
         complete: "Tamamla",
         completed: "Tamamlandı",
+        checkInSaved: "Check-in kaydedildi.",
+        checkInError: "Check-in kaydedilemedi. Tekrar dene.",
         cue: "İpucu",
         openHabit: "{{name}} alışkanlığını aç",
         notifications: "Yeni rozetler",
@@ -264,11 +267,54 @@ export const resources = {
         notifications: "Bildirimler",
         notificationsCopy: "Hatırlatmaları alışkanlık bazında yönet.",
         theme: "Tema",
-        themeCopy: "Şimdilik sistem görünümü kullanılıyor.",
+        activeTheme: "Aktif tema",
+        themeCopy: "Renk dilini seç; tercih bu cihazda saklanır.",
+        themeSaved: "Tema tercihi kaydedildi.",
+        themeError: "Tema tercihi kaydedilemedi. Tekrar dene.",
+        themeOptions: {
+          system: {
+            title: "Sistem",
+            copy: "Cihazın görünüm tercihine uy.",
+          },
+          calm: {
+            title: "Sakin",
+            copy: "Varsayılan wellness tonu.",
+          },
+          forest: {
+            title: "Orman",
+            copy: "Daha doğal ve odaklı yeşiller.",
+          },
+          sunrise: {
+            title: "Gün doğumu",
+            copy: "Sıcak ve enerjik başlangıç.",
+          },
+          ocean: {
+            title: "Okyanus",
+            copy: "Serin, berrak ve ferah.",
+          },
+          lavender: {
+            title: "Lavanta",
+            copy: "Yumuşak ve sakin mor tonlar.",
+          },
+          rose: {
+            title: "Gül",
+            copy: "Daha sıcak ve kişisel his.",
+          },
+          graphite: {
+            title: "Grafit",
+            copy: "Nötr, sade ve iş odaklı.",
+          },
+          night: {
+            title: "Gece",
+            copy: "Karanlık sistem tercihi.",
+          },
+          highContrast: {
+            title: "Yüksek kontrast",
+            copy: "Daha keskin okunabilirlik.",
+          },
+        },
         dataPrivacy: "Veri ve gizlilik",
         dataPrivacyCopy: "Paylaşım ve analitik tercihleri burada toplanacak.",
-        api: "API",
-        config: "Client config",
         signedOut: "Oturum açık değil",
       },
       notifications: {
@@ -362,9 +408,12 @@ export const resources = {
           keepGoing: "Keep the rhythm moving.",
         },
         createHabit: "Build habit",
+        habitCreated: "Habit created.",
         addHabit: "New habit",
         complete: "Complete",
         completed: "Done",
+        checkInSaved: "Check-in saved.",
+        checkInError: "Check-in could not be saved. Try again.",
         cue: "Cue",
         openHabit: "Open {{name}}",
         notifications: "New badges",
@@ -584,11 +633,54 @@ export const resources = {
         notifications: "Notifications",
         notificationsCopy: "Manage reminders per habit.",
         theme: "Theme",
-        themeCopy: "System appearance is used for now.",
+        activeTheme: "Active theme",
+        themeCopy: "Choose the color language; this preference is saved on this device.",
+        themeSaved: "Theme preference saved.",
+        themeError: "Theme preference could not be saved. Try again.",
+        themeOptions: {
+          system: {
+            title: "System",
+            copy: "Follow the device appearance.",
+          },
+          calm: {
+            title: "Calm",
+            copy: "The default wellness tone.",
+          },
+          forest: {
+            title: "Forest",
+            copy: "Natural, focused greens.",
+          },
+          sunrise: {
+            title: "Sunrise",
+            copy: "Warm and energetic.",
+          },
+          ocean: {
+            title: "Ocean",
+            copy: "Cool, clear, and airy.",
+          },
+          lavender: {
+            title: "Lavender",
+            copy: "Soft and quiet purple tones.",
+          },
+          rose: {
+            title: "Rose",
+            copy: "Warmer and more personal.",
+          },
+          graphite: {
+            title: "Graphite",
+            copy: "Neutral and work-focused.",
+          },
+          night: {
+            title: "Night",
+            copy: "Dark system preference.",
+          },
+          highContrast: {
+            title: "High contrast",
+            copy: "Sharper readability.",
+          },
+        },
         dataPrivacy: "Data and privacy",
         dataPrivacyCopy: "Sharing and analytics preferences will live here.",
-        api: "API",
-        config: "Client config",
         signedOut: "Signed out",
       },
       notifications: {

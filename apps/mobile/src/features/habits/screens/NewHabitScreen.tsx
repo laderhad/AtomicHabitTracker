@@ -96,7 +96,7 @@ export function NewHabitScreen() {
         });
       }
 
-      router.replace("/");
+      router.replace({ pathname: "/", params: { habitCreated: "1" } });
     } catch (submitError) {
       setSubmitError(submitError instanceof ApiError ? submitError.message : t("habitForm.errorGeneric"));
     }

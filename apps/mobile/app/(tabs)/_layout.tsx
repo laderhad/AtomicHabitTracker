@@ -2,22 +2,24 @@ import { Tabs } from "expo-router";
 import { ChartNoAxesColumnIncreasing, ListChecks, Settings2, UsersRound } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, layout, spacing } from "../../src/theme/theme";
+import { useThemeStore } from "../../src/store/theme";
+import { layout, spacing } from "../../src/theme/theme";
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const palette = useThemeStore((state) => state.palette);
   const bottomPadding = Math.max(insets.bottom, spacing.md);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.green,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: palette.green,
+        tabBarInactiveTintColor: palette.muted,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.line,
+          backgroundColor: palette.surface,
+          borderTopColor: palette.line,
           height: layout.tabBarBaseHeight + bottomPadding,
           paddingTop: spacing.sm,
           paddingBottom: bottomPadding,

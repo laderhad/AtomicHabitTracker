@@ -1,25 +1,33 @@
 import { router } from "expo-router";
-import { Bell, Database, Globe2, LogOut, Moon, Server, ShieldCheck, UserRound } from "lucide-react-native";
+import { Bell, Globe2, LogOut, ShieldCheck, UserRound } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Appearance, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Surface } from "../../src/components/primitives";
-import { API_BASE_URL, ApiError } from "../../src/services/apiClient";
+import { ThemePicker } from "../../src/features/settings/components/ThemePicker";
+import { ThemeOption } from "../../src/features/settings/themeOptions";
+import { ApiError } from "../../src/services/apiClient";
 import { normalizeLanguage, saveLanguagePreference, SupportedLanguage } from "../../src/services/languagePreference";
-import { useClientConfig, useUpdatePreferences } from "../../src/services/queries";
+import { useUpdatePreferences } from "../../src/services/queries";
 import { useAuthStore } from "../../src/store/auth";
+import { useThemeStore } from "../../src/store/theme";
 import { colors, layout, spacing } from "../../src/theme/theme";
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const config = useClientConfig();
+  const selectedTheme = useThemeStore((state) => state.selectedTheme);
+  const palette = useThemeStore((state) => state.palette);
+  const setTheme = useThemeStore((state) => state.setTheme);
   const updatePreferences = useUpdatePreferences();
   const [languageMessage, setLanguageMessage] = useState<string | null>(null);
   const [languageError, setLanguageError] = useState<string | null>(null);
   const [pendingLanguage, setPendingLanguage] = useState<SupportedLanguage | null>(null);
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [themeMessage, setThemeMessage] = useState<string | null>(null);
+  const [themeError, setThemeError] = useState<string | null>(null);
   const currentLanguage = normalizeLanguage(i18n.language);
   const activeLanguage = currentLanguage === "tr-TR" ? t("settings.turkish") : t("settings.english");
 
@@ -47,25 +55,39 @@ export default function SettingsScreen() {
     }
   }
 
+  async function changeTheme(theme: ThemeOption) {
+    setThemeMessage(null);
+    setThemeError(null);
+
+    try {
+      const savedTheme = await setTheme(theme);
+      applyNativeColorScheme(savedTheme);
+      setThemePickerOpen(false);
+      setThemeMessage(t("settings.themeSaved"));
+    } catch {
+      setThemeError(t("settings.themeError"));
+    }
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.paper }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>{t("settings.title")}</Text>
+          <Text style={[styles.title, { color: palette.ink }]}>{t("settings.title")}</Text>
         </View>
 
         <SettingsCard
-          icon={<UserRound color={colors.green} size={20} />}
+          icon={<UserRound color={palette.green} size={20} />}
           title={t("settings.account")}
           copy={user?.email ?? t("settings.signedOut")}
         />
 
         <Surface>
           <View style={styles.row}>
-            <Globe2 color={colors.blue} size={20} />
+            <Globe2 color={palette.blue} size={20} />
             <View style={styles.sectionCopy}>
-              <Text style={styles.sectionTitle}>{t("settings.language")}</Text>
-              <Text style={styles.copy}>
+              <Text style={[styles.sectionTitle, { color: palette.ink }]}>{t("settings.language")}</Text>
+              <Text style={[styles.copy, { color: palette.muted }]}>
                 {t("settings.activeLanguage")}: {activeLanguage}
               </Text>
             </View>
@@ -86,19 +108,26 @@ export default function SettingsScreen() {
               onPress={() => changeLanguage("en-US")}
             />
           </View>
-          {languageMessage ? <Text style={styles.feedback}>{languageMessage}</Text> : null}
-          {languageError ? <Text style={styles.error}>{languageError}</Text> : null}
+          {languageMessage ? <Text style={[styles.feedback, { color: palette.green }]}>{languageMessage}</Text> : null}
+          {languageError ? <Text style={[styles.error, { color: palette.coral }]}>{languageError}</Text> : null}
         </Surface>
 
         <SettingsCard
-          icon={<Bell color={colors.coral} size={20} />}
+          icon={<Bell color={palette.coral} size={20} />}
           title={t("settings.notifications")}
           copy={t("settings.notificationsCopy")}
           onPress={() => router.push("/notifications")}
         />
-        <SettingsCard icon={<Moon color={colors.blue} size={20} />} title={t("settings.theme")} copy={t("settings.themeCopy")} />
+        <ThemePicker
+          selectedTheme={selectedTheme}
+          isOpen={themePickerOpen}
+          onToggle={() => setThemePickerOpen((isOpen) => !isOpen)}
+          onSelect={changeTheme}
+        />
+        {themeMessage ? <Text style={[styles.feedback, { color: palette.green }]}>{themeMessage}</Text> : null}
+        {themeError ? <Text style={[styles.error, { color: palette.coral }]}>{themeError}</Text> : null}
         <SettingsCard
-          icon={<ShieldCheck color={colors.green} size={20} />}
+          icon={<ShieldCheck color={palette.green} size={20} />}
           title={t("settings.dataPrivacy")}
           copy={t("settings.dataPrivacyCopy")}
           onPress={() => router.push("/privacy")}
@@ -108,29 +137,22 @@ export default function SettingsScreen() {
           <Button
             label={t("common.logout")}
             variant="secondary"
-            icon={<LogOut color={colors.green} size={18} />}
+            icon={<LogOut color={palette.green} size={18} />}
             onPress={() => clearAuth()}
           />
-        ) : null}
-
-        {__DEV__ ? (
-          <Surface>
-            <View style={styles.row}>
-              <Server color={colors.green} size={20} />
-              <Text style={styles.sectionTitle}>{t("settings.api")}</Text>
-            </View>
-            <Text style={styles.mono}>{API_BASE_URL}</Text>
-            <View style={styles.row}>
-              <Database color={colors.muted} size={16} />
-              <Text style={styles.copy}>
-                {t("settings.config")}: {config.data?.apiVersion ?? "v1"} / {config.data?.deepLinkScheme ?? "atomichabits"}
-              </Text>
-            </View>
-          </Surface>
         ) : null}
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function applyNativeColorScheme(theme: ThemeOption) {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  const setColorScheme = Appearance.setColorScheme as (scheme: "light" | "dark" | null) => void;
+  setColorScheme(theme.colorScheme);
 }
 
 function SettingsCard({
@@ -144,12 +166,13 @@ function SettingsCard({
   copy: string;
   onPress?: () => void;
 }) {
+  const palette = useThemeStore((state) => state.palette);
   const content = (
     <View style={styles.row}>
       {icon}
       <View style={styles.sectionCopy}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.copy}>{copy}</Text>
+        <Text style={[styles.sectionTitle, { color: palette.ink }]}>{title}</Text>
+        <Text style={[styles.copy, { color: palette.muted }]}>{copy}</Text>
       </View>
     </View>
   );
@@ -202,12 +225,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "600",
-  },
-  mono: {
-    color: colors.ink,
-    fontFamily: "Menlo",
-    fontSize: 12,
-    fontWeight: "700",
   },
   row: {
     flexDirection: "row",

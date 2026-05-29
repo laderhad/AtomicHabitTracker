@@ -10,7 +10,8 @@ import {
   View,
   ViewProps,
 } from "react-native";
-import { colors, radius, shadow, spacing } from "../theme/theme";
+import { radius, shadow, spacing } from "../theme/theme";
+import { useThemeStore } from "../store/theme";
 
 type ButtonProps = PressableProps & {
   label: string;
@@ -31,6 +32,8 @@ export function Button({
   accessibilityLabel,
   ...props
 }: ButtonProps) {
+  const palette = useThemeStore((state) => state.palette);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -38,21 +41,34 @@ export function Button({
       disabled={disabled || isLoading}
       style={({ pressed }) => [
         styles.button,
-        styles[variant],
+        variant === "primary" && { backgroundColor: palette.green },
+        variant === "secondary" && {
+          backgroundColor: palette.greenSoft,
+          borderWidth: 1,
+          borderColor: palette.greenLine,
+        },
+        variant === "ghost" && styles.ghost,
         pressed && styles.pressed,
         disabled && !isLoading && styles.disabled,
-        disabled && !isLoading && variant === "primary" && styles.disabledPrimary,
-        disabled && !isLoading && variant !== "primary" && styles.disabledSecondary,
+        disabled && !isLoading && variant === "primary" && {
+          backgroundColor: palette.faint,
+          borderWidth: 1,
+          borderColor: palette.line,
+        },
+        disabled && !isLoading && variant !== "primary" && {
+          backgroundColor: palette.faint,
+          borderColor: palette.line,
+        },
         typeof style === "function" ? style({ pressed }) : style,
       ]}
       {...props}
     >
-      {isLoading ? <ActivityIndicator color={variant === "primary" ? colors.surface : colors.green} /> : icon}
+      {isLoading ? <ActivityIndicator color={variant === "primary" ? palette.surface : palette.green} /> : icon}
       <Text
         style={[
           styles.buttonText,
-          variant === "primary" ? styles.primaryText : styles.secondaryText,
-          disabled && !isLoading && styles.disabledText,
+          { color: variant === "primary" ? palette.surface : palette.green },
+          disabled && !isLoading && { color: palette.muted },
         ]}
       >
         {isLoading && loadingLabel ? loadingLabel : label}
@@ -66,14 +82,43 @@ export function Surface({
   tone = "plain",
   style,
 }: ViewProps & { children: ReactNode; tone?: "plain" | "green" | "coral" }) {
-  return <View style={[styles.surface, styles[`${tone}Surface`], style]}>{children}</View>;
+  const palette = useThemeStore((state) => state.palette);
+  const toneStyle =
+    tone === "green"
+      ? { backgroundColor: palette.greenSoft, borderColor: palette.greenLine }
+      : tone === "coral"
+        ? { backgroundColor: palette.coralSoft, borderColor: palette.coral }
+        : {};
+
+  return (
+    <View
+      style={[
+        styles.surface,
+        { backgroundColor: palette.surface, borderColor: palette.line },
+        toneStyle,
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 export function Field({ style, ...props }: TextInputProps) {
+  const palette = useThemeStore((state) => state.palette);
+
   return (
     <TextInput
-      placeholderTextColor={colors.muted}
-      style={[styles.input, style]}
+      placeholderTextColor={palette.muted}
+      style={[
+        styles.input,
+        {
+          borderColor: palette.line,
+          backgroundColor: palette.surface,
+          color: palette.ink,
+        },
+        style,
+      ]}
       autoCapitalize="none"
       {...props}
     />
@@ -81,10 +126,12 @@ export function Field({ style, ...props }: TextInputProps) {
 }
 
 export function Metric({ label, value }: { label: string; value: string }) {
+  const palette = useThemeStore((state) => state.palette);
+
   return (
-    <View style={styles.metric}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
+    <View style={[styles.metric, { borderColor: palette.line, backgroundColor: palette.surface }]}>
+      <Text style={[styles.metricValue, { color: palette.ink }]}>{value}</Text>
+      <Text style={[styles.metricLabel, { color: palette.muted }]}>{label}</Text>
     </View>
   );
 }
@@ -100,14 +147,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  primary: {
-    backgroundColor: colors.green,
-  },
-  secondary: {
-    backgroundColor: colors.greenSoft,
-    borderWidth: 1,
-    borderColor: colors.greenLine,
-  },
   ghost: {
     backgroundColor: "transparent",
   },
@@ -117,53 +156,21 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 1,
   },
-  disabledPrimary: {
-    backgroundColor: colors.faint,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  disabledSecondary: {
-    backgroundColor: colors.faint,
-    borderColor: colors.line,
-  },
-  disabledText: {
-    color: colors.muted,
-  },
   buttonText: {
     fontSize: 15,
     fontWeight: "700",
   },
-  primaryText: {
-    color: colors.surface,
-  },
-  secondaryText: {
-    color: colors.green,
-  },
   surface: {
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
     padding: spacing.lg,
     gap: spacing.md,
     ...shadow,
-  },
-  plainSurface: {},
-  greenSurface: {
-    backgroundColor: colors.greenSoft,
-    borderColor: colors.greenLine,
-  },
-  coralSurface: {
-    backgroundColor: colors.coralSoft,
-    borderColor: "#ecc6ba",
   },
   input: {
     minHeight: 48,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    color: colors.ink,
     paddingHorizontal: spacing.md,
     fontSize: 16,
   },
@@ -171,18 +178,14 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
     padding: spacing.md,
     gap: spacing.xs,
   },
   metricValue: {
-    color: colors.ink,
     fontSize: 22,
     fontWeight: "800",
   },
   metricLabel: {
-    color: colors.muted,
     fontSize: 12,
     fontWeight: "700",
   },

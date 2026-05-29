@@ -16,6 +16,8 @@ export const colors = {
   blueSoft: "#dfeafa",
 };
 
+export type ThemeColors = typeof colors;
+
 export const spacing = {
   xs: 4,
   sm: 8,
