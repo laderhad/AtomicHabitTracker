@@ -8,6 +8,18 @@ type NotificationsModule = typeof import("expo-notifications");
 
 type NotificationIdsByHabit = Record<string, string[]>;
 
+export type LocalNotificationPermissionStatus = {
+  supported: boolean;
+  granted: boolean;
+  status: string;
+  canAskAgain: boolean;
+};
+
+export type LocalReminderSummary = {
+  habitCount: number;
+  notificationCount: number;
+};
+
 export type HabitReminderScheduleInput = {
   habitId: string;
   habitName: string;
@@ -95,6 +107,73 @@ export async function scheduleHabitReminder(
     status: "scheduled",
     count: identifiers.length,
   };
+}
+
+export async function getLocalNotificationPermissionStatus(): Promise<LocalNotificationPermissionStatus> {
+  if (Platform.OS === "web") {
+    return {
+      supported: false,
+      granted: false,
+      status: "unsupported",
+      canAskAgain: false,
+    };
+  }
+
+  const Notifications = await getNotificationsModule();
+  const permissions = await Notifications.getPermissionsAsync();
+
+  return {
+    supported: true,
+    granted: permissions.granted,
+    status: permissions.status,
+    canAskAgain: permissions.canAskAgain,
+  };
+}
+
+export async function requestLocalNotificationPermission(): Promise<LocalNotificationPermissionStatus> {
+  if (Platform.OS === "web") {
+    return getLocalNotificationPermissionStatus();
+  }
+
+  const Notifications = await getNotificationsModule();
+  const permissions = await Notifications.requestPermissionsAsync({
+    ios: {
+      allowAlert: true,
+      allowBadge: false,
+      allowSound: false,
+    },
+  });
+
+  return {
+    supported: true,
+    granted: permissions.granted,
+    status: permissions.status,
+    canAskAgain: permissions.canAskAgain,
+  };
+}
+
+export async function getLocalReminderSummary(): Promise<LocalReminderSummary> {
+  const allIdentifiers = await getHabitReminderNotificationIds();
+  const identifiersByHabit = Object.values(allIdentifiers).filter((identifiers) => identifiers.length > 0);
+
+  return {
+    habitCount: identifiersByHabit.length,
+    notificationCount: identifiersByHabit.reduce((total, identifiers) => total + identifiers.length, 0),
+  };
+}
+
+export async function clearAllLocalHabitReminders() {
+  const allIdentifiers = await getHabitReminderNotificationIds();
+
+  if (Platform.OS !== "web") {
+    const Notifications = await getNotificationsModule();
+    const identifiers = Object.values(allIdentifiers).flat();
+    await Promise.all(
+      identifiers.map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier)),
+    );
+  }
+
+  await AsyncStorage.removeItem(REMINDER_NOTIFICATION_IDS_KEY);
 }
 
 export async function cancelHabitReminder(habitId: string) {

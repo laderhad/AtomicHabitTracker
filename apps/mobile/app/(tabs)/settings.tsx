@@ -94,6 +94,7 @@ export default function SettingsScreen() {
           icon={<Bell color={colors.coral} size={20} />}
           title={t("settings.notifications")}
           copy={t("settings.notificationsCopy")}
+          onPress={() => router.push("/notifications")}
         />
         <SettingsCard icon={<Moon color={colors.blue} size={20} />} title={t("settings.theme")} copy={t("settings.themeCopy")} />
         <SettingsCard

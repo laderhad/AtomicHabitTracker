@@ -38,6 +38,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="auth" options={{ presentation: "modal" }} />
+        <Stack.Screen name="notifications" options={{ presentation: "modal" }} />
         <Stack.Screen name="privacy" options={{ presentation: "modal" }} />
       </Stack>
     </AppProviders>
