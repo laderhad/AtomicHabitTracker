@@ -9,7 +9,7 @@ public static class HealthEndpoints
         app.MapGet("/api/v1/health", (IClock clock) => Results.Ok(new
         {
             status = "ok",
-            service = "AtomicHabits.Api",
+            service = "Routivo.Api",
             utcNow = clock.UtcNow
         }))
         .WithName("GetHealth")

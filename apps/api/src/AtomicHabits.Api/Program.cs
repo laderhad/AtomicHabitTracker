@@ -39,20 +39,27 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptio
 
 var allowedCorsOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
-    .Get<string[]>() ?? [];
+    .Get<string[]>();
+
+allowedCorsOrigins =
+    allowedCorsOrigins is { Length: > 0 }
+        ? allowedCorsOrigins
+        : [
+            "http://localhost:8081",
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://routivo.vercel.app",
+            "https://routivo.com",
+            "https://www.routivo.com"
+        ];
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("MobileDev", policy =>
-    {
-        if (allowedCorsOrigins.Length > 0)
-        {
-            policy
-                .WithOrigins(allowedCorsOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        }
-    });
+    options.AddPolicy("RoutivoCors", policy =>
+        policy
+            .WithOrigins(allowedCorsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 builder.Services
@@ -100,10 +107,7 @@ await app.ApplyDatabaseMigrationsAsync();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-if (app.Configuration.GetValue<bool>("Cors:Enabled"))
-{
-    app.UseCors("MobileDev");
-}
+app.UseCors("RoutivoCors");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Atomic Habit Tracker",
-    "slug": "atomic-habit-tracker",
-    "scheme": "atomichabits",
+    "name": "Routivo",
+    "slug": "routivo",
+    "scheme": "routivo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

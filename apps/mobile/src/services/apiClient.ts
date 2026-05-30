@@ -1,12 +1,10 @@
 import { Platform } from "react-native";
 import { AuthPayload, useAuthStore } from "../store/auth";
 
-const defaultBaseUrl = Platform.select({
-  android: "http://10.0.2.2:8080",
-  default: "http://localhost:8080",
-});
+const configuredBaseUrl = process.env.EXPO_PUBLIC_API_URL;
+const defaultBaseUrl = Platform.OS === "android" ? "http://10.0.2.2:8080" : "";
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
+export const API_BASE_URL = normalizeApiBaseUrl(configuredBaseUrl ?? defaultBaseUrl);
 
 type ApiRequestOptions = RequestInit & {
   skipAuth?: boolean;
@@ -57,7 +55,7 @@ async function rawRequest<T>(path: string, options: ApiRequestOptions) {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  return fetch(`${API_BASE_URL}${path}`, {
+  return fetch(`${API_BASE_URL}${normalizeApiPath(path)}`, {
     ...options,
     headers,
   });
@@ -94,4 +92,18 @@ async function refreshAccessToken() {
     await clearAuth();
     return false;
   }
+}
+
+function normalizeApiBaseUrl(value: string | undefined) {
+  const baseUrl = value?.trim().replace(/\/+$/, "");
+
+  if (!baseUrl) {
+    return "";
+  }
+
+  return baseUrl.endsWith("/api/v1") ? baseUrl.slice(0, -"/api/v1".length) : baseUrl;
+}
+
+function normalizeApiPath(path: string) {
+  return path.startsWith("/api/v1") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
 }

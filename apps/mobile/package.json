@@ -32,6 +32,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-$VITE_API_BASE_URL} expo export --platform web",
+    "build:web": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-$VITE_API_BASE_URL} expo export --platform web",
     "typecheck": "tsc --noEmit"
   },
   "private": true

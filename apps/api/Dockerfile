@@ -14,6 +14,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://+:8080
+ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "AtomicHabits.Api.dll"]
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} exec dotnet AtomicHabits.Api.dll"]

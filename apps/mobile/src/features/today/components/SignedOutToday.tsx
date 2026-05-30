@@ -15,7 +15,7 @@ export function SignedOutToday({ service }: { service?: string }) {
         <Text style={styles.copy}>{t("today.signedOutCopy")}</Text>
         <Button label={t("common.login")} onPress={() => router.push("/auth")} />
       </Surface>
-      <Text style={styles.meta}>{service ?? "AtomicHabits.Api"}</Text>
+      <Text style={styles.meta}>{service ?? "Routivo.Api"}</Text>
     </ScreenFrame>
   );
 }

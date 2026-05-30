@@ -44,3 +44,4 @@ ios/build/
 .env.*
 !.env.example
 instruction.md
+.env.example

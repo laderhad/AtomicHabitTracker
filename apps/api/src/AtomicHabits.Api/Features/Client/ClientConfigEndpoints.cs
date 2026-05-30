@@ -23,13 +23,13 @@ public static class ClientConfigEndpoints
             configuration.GetValue<bool>("OpenApi:Enabled");
 
         return Results.Ok(new ClientConfigResponse(
-            Service: "AtomicHabits.Api",
+            Service: "Routivo.Api",
             ApiVersion: "v1",
             UtcNow: clock.UtcNow,
             SupportedCultures: ["tr-TR", "en-US"],
             DefaultCulture: "tr-TR",
             FallbackCulture: "en-US",
-            DeepLinkScheme: "atomichabits",
+            DeepLinkScheme: "routivo",
             OpenApiUrl: "/openapi/v1.json",
             OpenApiEnabled: openApiEnabled,
             Features: new ClientFeatureFlags(
