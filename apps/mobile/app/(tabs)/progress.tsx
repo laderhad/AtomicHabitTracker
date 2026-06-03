@@ -1,23 +1,27 @@
-import { Award, CalendarDays, Flame } from "lucide-react-native";
+import { CalendarDays, Flame } from "lucide-react-native";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorState } from "../../src/components/ErrorState";
 import { Metric, Surface } from "../../src/components/primitives";
+import { BadgeGalleryCard } from "../../src/features/progress/components/BadgeGalleryCard";
+import { WeeklyReviewCard } from "../../src/features/progress/components/WeeklyReviewCard";
 import { useGamificationSummary, useProgressDashboard } from "../../src/services/queries";
 import { useAuthStore } from "../../src/store/auth";
+import { useThemeStore } from "../../src/store/theme";
 import { colors, layout, spacing } from "../../src/theme/theme";
 import { uniqueProgressHabits } from "../../src/utils/habits";
-import { WeeklyReviewCard } from "../../src/features/progress/components/WeeklyReviewCard";
 
 export default function ProgressScreen() {
   const { t, i18n } = useTranslation();
   const token = useAuthStore((state) => state.accessToken);
+  const palette = useThemeStore((state) => state.palette);
   const progress = useProgressDashboard();
   const gamification = useGamificationSummary(i18n.language);
   const habits = uniqueProgressHabits(progress.data?.habits ?? []);
   const completionPercent = Math.round((progress.data?.completionRate ?? 0) * 100);
+  const normalizedCompletionPercent = Math.max(0, Math.min(100, completionPercent));
   const refreshing = progress.isRefetching || gamification.isRefetching;
 
   const refreshProgress = useCallback(() => {
@@ -29,7 +33,7 @@ export default function ProgressScreen() {
   }, [gamification, progress, token]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.paper }]}>
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={
@@ -37,23 +41,23 @@ export default function ProgressScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={refreshProgress}
-              tintColor={colors.green}
-              colors={[colors.green]}
+              tintColor={palette.green}
+              colors={[palette.green]}
             />
           ) : undefined
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t("progress.title")}</Text>
-          <Text style={styles.subtitle}>{t("progress.subtitle")}</Text>
+          <Text style={[styles.title, { color: palette.ink }]}>{t("progress.title")}</Text>
+          <Text style={[styles.subtitle, { color: palette.muted }]}>{t("progress.subtitle")}</Text>
         </View>
 
         {!token ? (
           <Surface>
-            <Text style={styles.copy}>{t("settings.signedOut")}</Text>
+            <Text style={[styles.copy, { color: palette.muted }]}>{t("settings.signedOut")}</Text>
           </Surface>
         ) : progress.isLoading ? (
-          <ActivityIndicator color={colors.green} />
+          <ActivityIndicator color={palette.green} />
         ) : progress.error ? (
           <ErrorState
             title={t("common.loadErrorTitle")}
@@ -66,14 +70,19 @@ export default function ProgressScreen() {
             <Surface style={styles.weekCard}>
               <View style={styles.rowBetween}>
                 <View style={styles.row}>
-                  <CalendarDays color={colors.green} size={20} />
-                  <Text style={styles.cardTitle}>{t("progress.lastSevenDays")}</Text>
+                  <CalendarDays color={palette.green} size={20} />
+                  <Text style={[styles.cardTitle, { color: palette.ink }]}>{t("progress.lastSevenDays")}</Text>
                 </View>
-                <Text style={styles.percentText}>%{completionPercent}</Text>
+                <Text style={[styles.percentText, { color: palette.green }]}>%{completionPercent}</Text>
               </View>
-              <Text style={styles.copy}>{t("progress.systemPulse")}</Text>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${completionPercent}%` }]} />
+              <Text style={[styles.copy, { color: palette.muted }]}>{t("progress.systemPulse")}</Text>
+              <View style={[styles.progressTrack, { backgroundColor: palette.faint }]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { backgroundColor: palette.green, width: `${normalizedCompletionPercent}%` },
+                  ]}
+                />
               </View>
             </Surface>
 
@@ -88,24 +97,12 @@ export default function ProgressScreen() {
               <Metric label={t("progress.activeHabits")} value={`${habits.length}`} />
             </View>
 
-            <Surface>
-              <View style={styles.row}>
-                <Award color={colors.gold} size={20} />
-                <Text style={styles.cardTitle}>{t("progress.badges")}</Text>
-              </View>
-              <View style={styles.badgeGrid}>
-                {gamification.data?.badges.map((badge) => (
-                  <View key={badge.code} style={[styles.badgeChip, badge.isUnlocked && styles.badgeUnlocked]}>
-                    <Text style={[styles.badgeText, badge.isUnlocked && styles.badgeUnlockedText]}>{badge.title}</Text>
-                  </View>
-                ))}
-              </View>
-            </Surface>
+            <BadgeGalleryCard summary={gamification.data} />
 
             <Surface>
               <View style={styles.row}>
-                <Flame color={colors.coral} size={20} />
-                <Text style={styles.cardTitle}>{t("progress.streaks")}</Text>
+                <Flame color={palette.coral} size={20} />
+                <Text style={[styles.cardTitle, { color: palette.ink }]}>{t("progress.streaks")}</Text>
               </View>
               {habits.length ? (
                 <FlatList
@@ -113,9 +110,9 @@ export default function ProgressScreen() {
                   keyExtractor={(item) => item.id}
                   scrollEnabled={false}
                   renderItem={({ item }) => (
-                    <View style={styles.streakRow}>
-                      <Text style={styles.habitName}>{item.name}</Text>
-                      <Text style={styles.streakText}>
+                    <View style={[styles.streakRow, { borderBottomColor: palette.faint }]}>
+                      <Text style={[styles.habitName, { color: palette.ink }]}>{item.name}</Text>
+                      <Text style={[styles.streakText, { color: item.currentStreak > 0 ? palette.coral : palette.green }]}>
                         {item.currentStreak > 0
                           ? t("progress.streakDays", { count: item.currentStreak })
                           : t("progress.waitingToday")}
@@ -124,7 +121,7 @@ export default function ProgressScreen() {
                   )}
                 />
               ) : (
-                <Text style={styles.copy}>{t("progress.noData")}</Text>
+                <Text style={[styles.copy, { color: palette.muted }]}>{t("progress.noData")}</Text>
               )}
             </Surface>
           </>
@@ -152,12 +149,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.ink,
     fontSize: 34,
     fontWeight: "900",
   },
   subtitle: {
-    color: colors.muted,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -180,53 +175,26 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   cardTitle: {
-    color: colors.ink,
     fontSize: 18,
     fontWeight: "800",
   },
   copy: {
-    color: colors.muted,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "600",
   },
   percentText: {
-    color: colors.green,
     fontSize: 24,
     fontWeight: "900",
   },
   progressTrack: {
     height: 8,
     borderRadius: 999,
-    backgroundColor: colors.faint,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: colors.green,
-  },
-  badgeGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  badgeChip: {
-    borderRadius: 999,
-    backgroundColor: colors.faint,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  badgeUnlocked: {
-    backgroundColor: colors.goldSoft,
-  },
-  badgeText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  badgeUnlockedText: {
-    color: colors.gold,
   },
   streakRow: {
     minHeight: 48,
@@ -234,16 +202,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: colors.faint,
     gap: spacing.md,
   },
   habitName: {
     flex: 1,
-    color: colors.ink,
     fontWeight: "800",
   },
   streakText: {
-    color: colors.green,
     fontSize: 14,
     fontWeight: "900",
   },

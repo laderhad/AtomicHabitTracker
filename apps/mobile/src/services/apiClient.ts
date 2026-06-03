@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 import { AuthPayload, useAuthStore } from "../store/auth";
 
 const configuredBaseUrl = process.env.EXPO_PUBLIC_API_URL;
-const defaultBaseUrl = Platform.OS === "android" ? "http://10.0.2.2:8080" : "";
+const defaultBaseUrl = getDefaultApiBaseUrl();
 
 export const API_BASE_URL = normalizeApiBaseUrl(configuredBaseUrl ?? defaultBaseUrl);
 
@@ -106,4 +106,12 @@ function normalizeApiBaseUrl(value: string | undefined) {
 
 function normalizeApiPath(path: string) {
   return path.startsWith("/api/v1") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function getDefaultApiBaseUrl() {
+  if (process.env.NODE_ENV === "production") {
+    return "";
+  }
+
+  return Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
 }
