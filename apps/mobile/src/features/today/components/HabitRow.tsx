@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Surface } from "../../../components/primitives";
 import { TodayHabit } from "../../../services/types";
-import { colors } from "../../../theme/theme";
+import { useThemeStore } from "../../../store/theme";
 import { todayStyles as styles } from "../TodayScreen.styles";
 
 export function HabitRow({
@@ -18,6 +18,7 @@ export function HabitRow({
   isLoading: boolean;
 }) {
   const { t } = useTranslation();
+  const palette = useThemeStore((state) => state.palette);
 
   return (
     <Surface>
@@ -28,25 +29,25 @@ export function HabitRow({
           onPress={onOpen}
           style={styles.habitText}
         >
-          <Text style={styles.habitName}>{habit.name}</Text>
-          <Text style={styles.copy}>
+          <Text style={[styles.habitName, { color: palette.ink }]}>{habit.name}</Text>
+          <Text style={[styles.copy, { color: palette.muted }]}>
             {t("today.cue")}: {habit.cueText || habit.category}
           </Text>
         </Pressable>
         {habit.completedToday ? (
-          <View style={styles.donePill}>
-            <Check color={colors.green} size={16} />
-            <Text style={styles.doneText}>{t("today.completed")}</Text>
+          <View style={[styles.donePill, { backgroundColor: palette.greenSoft }]}>
+            <Check color={palette.green} size={16} />
+            <Text style={[styles.doneText, { color: palette.green }]}>{t("today.completed")}</Text>
           </View>
         ) : (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("today.complete")}
             onPress={onComplete}
-            style={styles.completeButton}
+            style={[styles.completeButton, { backgroundColor: palette.green }]}
             disabled={isLoading}
           >
-            {isLoading ? <ActivityIndicator color={colors.surface} /> : <Check color={colors.surface} size={20} />}
+            {isLoading ? <ActivityIndicator color={palette.surface} /> : <Check color={palette.surface} size={20} />}
           </Pressable>
         )}
         <Pressable
@@ -55,7 +56,7 @@ export function HabitRow({
           onPress={onOpen}
           style={styles.openHabitButton}
         >
-          <ChevronRight color={colors.muted} size={20} />
+          <ChevronRight color={palette.muted} size={20} />
         </Pressable>
       </View>
     </Surface>

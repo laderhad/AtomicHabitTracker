@@ -160,11 +160,20 @@ export const resources = {
       auth: {
         titleLogin: "Hesabına gir",
         titleRegister: "Hesap oluştur",
+        subtitleLogin: "Bugünkü küçük sistemine devam et.",
+        subtitleRegister: "İlk sistemini kurmak için kısa bir hesap oluştur.",
         switchToRegister: "Kayıt ol",
         switchToLogin: "Giriş yap",
         submitLogin: "Giriş yap",
         submitRegister: "Kaydı tamamla",
         passwordHint: "Parola en az 10 karakter olmalı; büyük harf, küçük harf ve rakam içermeli.",
+        showPassword: "Parolayı göster",
+        hidePassword: "Parolayı gizle",
+        placeholders: {
+          displayName: "Adın",
+          email: "E-posta adresin",
+          password: "Parolan",
+        },
         errors: {
           required: "E-posta ve parola gerekli.",
           displayNameRequired: "Ad alanı gerekli.",
@@ -534,11 +543,20 @@ export const resources = {
       auth: {
         titleLogin: "Log in",
         titleRegister: "Create account",
+        subtitleLogin: "Continue today's small system.",
+        subtitleRegister: "Create a short account to build your first system.",
         switchToRegister: "Register",
         switchToLogin: "Log in",
         submitLogin: "Log in",
         submitRegister: "Create account",
         passwordHint: "Password must be at least 10 characters and include uppercase, lowercase, and a number.",
+        showPassword: "Show password",
+        hidePassword: "Hide password",
+        placeholders: {
+          displayName: "Your name",
+          email: "Your email",
+          password: "Your password",
+        },
         errors: {
           required: "Email and password are required.",
           displayNameRequired: "Name is required.",

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../../theme/theme";
+import { useThemeStore } from "../../../store/theme";
 import { todayStyles as styles } from "../TodayScreen.styles";
 
 type ScreenFrameProps = {
@@ -14,8 +14,10 @@ type ScreenFrameProps = {
 };
 
 export function ScreenFrame({ title, subtitle, children, overlay, refreshing, onRefresh }: ScreenFrameProps) {
+  const palette = useThemeStore((state) => state.palette);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.paper }]}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -24,15 +26,15 @@ export function ScreenFrame({ title, subtitle, children, overlay, refreshing, on
             <RefreshControl
               refreshing={Boolean(refreshing)}
               onRefresh={onRefresh}
-              tintColor={colors.green}
-              colors={[colors.green]}
+              tintColor={palette.green}
+              colors={[palette.green]}
             />
           ) : undefined
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={[styles.title, { color: palette.ink }]}>{title}</Text>
+          <Text style={[styles.subtitle, { color: palette.muted }]}>{subtitle}</Text>
         </View>
         {children}
       </ScrollView>

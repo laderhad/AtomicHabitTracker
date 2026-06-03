@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { type TFunction } from "i18next";
-import { LogIn, UserPlus } from "lucide-react-native";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -8,17 +8,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Field, Surface } from "../src/components/primitives";
 import { ApiError } from "../src/services/apiClient";
 import { useAuthMutation } from "../src/services/queries";
+import { useThemeStore } from "../src/store/theme";
 import { colors, spacing } from "../src/theme/theme";
 
 export default function AuthScreen() {
   const { t, i18n } = useTranslation();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("Password1234");
+  const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const palette = useThemeStore((state) => state.palette);
   const authMutation = useAuthMutation(mode);
   const isRegister = mode === "register";
+  const trimmedEmail = email.trim();
+  const isFormReady = isRegister
+    ? Boolean(trimmedEmail && password && displayName.trim() && isPasswordPolicyReady(password))
+    : Boolean(trimmedEmail && password);
 
   function clearError() {
     setFormError(null);
@@ -28,7 +35,6 @@ export default function AuthScreen() {
   async function submit() {
     clearError();
 
-    const trimmedEmail = email.trim();
     const validationError = validateAuthForm(trimmedEmail, password, displayName, isRegister, t);
 
     if (validationError) {
@@ -51,10 +57,15 @@ export default function AuthScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.paper }]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>{isRegister ? t("auth.titleRegister") : t("auth.titleLogin")}</Text>
+          <Text style={[styles.title, { color: palette.ink }]}>
+            {isRegister ? t("auth.titleRegister") : t("auth.titleLogin")}
+          </Text>
+          <Text style={[styles.subtitle, { color: palette.muted }]}>
+            {isRegister ? t("auth.subtitleRegister") : t("auth.subtitleLogin")}
+          </Text>
         </View>
 
         <Surface>
@@ -62,10 +73,10 @@ export default function AuthScreen() {
             <Field
               value={displayName}
               onChangeText={(value) => {
-                setDisplayName(value);
-                clearError();
-              }}
-              placeholder={t("common.displayName")}
+              setDisplayName(value);
+              clearError();
+            }}
+              placeholder={t("auth.placeholders.displayName")}
               textContentType="name"
             />
           ) : null}
@@ -75,26 +86,42 @@ export default function AuthScreen() {
               setEmail(value);
               clearError();
             }}
-            placeholder={t("common.email")}
+            placeholder={t("auth.placeholders.email")}
             keyboardType="email-address"
             textContentType="emailAddress"
           />
-          <Field
-            value={password}
-            onChangeText={(value) => {
-              setPassword(value);
-              clearError();
-            }}
-            placeholder={t("common.password")}
-            secureTextEntry
-            textContentType="password"
-          />
-          {isRegister ? <Text style={styles.hint}>{t("auth.passwordHint")}</Text> : null}
-          {formError ? <Text style={styles.error}>{formError}</Text> : null}
+          <View style={styles.passwordField}>
+            <Field
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value);
+                clearError();
+              }}
+              placeholder={t("auth.placeholders.password")}
+              secureTextEntry={!isPasswordVisible}
+              textContentType="password"
+              style={styles.passwordInput}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isPasswordVisible ? t("auth.hidePassword") : t("auth.showPassword")}
+              onPress={() => setPasswordVisible((isVisible) => !isVisible)}
+              style={styles.passwordToggle}
+            >
+              {isPasswordVisible ? (
+                <EyeOff color={palette.muted} size={20} />
+              ) : (
+                <Eye color={palette.muted} size={20} />
+              )}
+            </Pressable>
+          </View>
+          {isRegister ? <Text style={[styles.hint, { color: palette.muted }]}>{t("auth.passwordHint")}</Text> : null}
+          {formError ? <Text style={[styles.error, { color: palette.coral }]}>{formError}</Text> : null}
           <Button
             label={isRegister ? t("auth.submitRegister") : t("auth.submitLogin")}
             icon={isRegister ? <UserPlus color={colors.surface} size={18} /> : <LogIn color={colors.surface} size={18} />}
             isLoading={authMutation.isPending}
+            disabled={!isFormReady}
             onPress={submit}
           />
           <Pressable
@@ -102,11 +129,14 @@ export default function AuthScreen() {
             accessibilityLabel={isRegister ? t("auth.switchToLogin") : t("auth.switchToRegister")}
             onPress={() => {
               clearError();
+              setPasswordVisible(false);
               setMode(isRegister ? "login" : "register");
             }}
             style={styles.switcher}
           >
-            <Text style={styles.switchText}>{isRegister ? t("auth.switchToLogin") : t("auth.switchToRegister")}</Text>
+            <Text style={[styles.switchText, { color: palette.green }]}>
+              {isRegister ? t("auth.switchToLogin") : t("auth.switchToRegister")}
+            </Text>
           </Pressable>
         </Surface>
       </KeyboardAvoidingView>
@@ -195,19 +225,36 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   title: {
-    color: colors.ink,
     fontSize: 30,
     fontWeight: "900",
   },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
   error: {
-    color: colors.coral,
     fontWeight: "700",
   },
   hint: {
-    color: colors.muted,
     fontSize: 12,
     fontWeight: "600",
     lineHeight: 18,
+  },
+  passwordField: {
+    position: "relative",
+  },
+  passwordInput: {
+    paddingRight: 52,
+  },
+  passwordToggle: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
   switcher: {
     minHeight: 40,
@@ -215,7 +262,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   switchText: {
-    color: colors.green,
     fontWeight: "800",
   },
 });

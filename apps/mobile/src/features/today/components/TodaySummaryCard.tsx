@@ -2,10 +2,12 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Surface } from "../../../components/primitives";
 import { TodayHabit } from "../../../services/types";
+import { useThemeStore } from "../../../store/theme";
 import { todayStyles as styles } from "../TodayScreen.styles";
 
 export function TodaySummaryCard({ habits }: { habits: TodayHabit[] }) {
   const { t } = useTranslation();
+  const palette = useThemeStore((state) => state.palette);
   const total = habits.length;
   const completed = habits.filter((habit) => habit.completedToday).length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -18,13 +20,17 @@ export function TodaySummaryCard({ habits }: { habits: TodayHabit[] }) {
     <Surface style={styles.summaryCard}>
       <View style={styles.summaryHeader}>
         <View>
-          <Text style={styles.summaryTitle}>{t("today.summaryTitle", { completed, total })}</Text>
-          <Text style={styles.summaryCopy}>{getMotivation(total - completed, completed, t)}</Text>
+          <Text style={[styles.summaryTitle, { color: palette.ink }]}>
+            {t("today.summaryTitle", { completed, total })}
+          </Text>
+          <Text style={[styles.summaryCopy, { color: palette.muted }]}>
+            {getMotivation(total - completed, completed, t)}
+          </Text>
         </View>
-        <Text style={styles.summaryPercent}>%{percent}</Text>
+        <Text style={[styles.summaryPercent, { color: palette.green }]}>%{percent}</Text>
       </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${percent}%` }]} />
+      <View style={[styles.progressTrack, { backgroundColor: palette.faint }]}>
+        <View style={[styles.progressFill, { backgroundColor: palette.green, width: `${percent}%` }]} />
       </View>
     </Surface>
   );

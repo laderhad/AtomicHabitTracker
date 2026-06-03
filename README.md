@@ -57,3 +57,22 @@ A mobile-first habit tracking application designed to help users build sustainab
 ## Legal Note
 
 This project is an independent habit tracker and does not include copyrighted book text or official book content.
+
+## Screenshots
+
+Application screenshots are stored in the `docs/images/` directory. Add your images there (e.g. `screenshot-today.png`, `screenshot-progress.png`) and reference them directly from the README or other docs. Example markdown:
+
+Below are the current app screenshots (click to open full size):
+
+<div>
+	<img src="docs/images/screenshot-today.png" alt="Today screen" width="360" style="margin:8px" />
+	<img src="docs/images/screenshot-progress.png" alt="Progress screen" width="360" style="margin:8px" />
+</div>
+
+<div>
+	<img src="docs/images/screenshot-social.png" alt="Social screen" width="360" style="margin:8px" />
+	<img src="docs/images/screenshot-settings.png" alt="Settings screen" width="360" style="margin:8px" />
+</div>
+
+If you prefer different ordering, captions, or sizes, tell me how you want them arranged.
+
